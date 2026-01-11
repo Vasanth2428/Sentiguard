@@ -1,37 +1,20 @@
 package com.sentiguard.app.ui
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.sp
+import com.sentiguard.app.ui.theme.SentiguardTheme
+
+import androidx.activity.enableEdgeToEdge
 
 class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        Log.e("SENTIGUARD_DEBUG", "MainActivity onCreate CALLED")
-
+        enableEdgeToEdge()
         setContent {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black),
-                contentAlignment = Alignment.Center
-            ) {
-                Text(
-                    text = "SENTIGUARD UI WORKING",
-                    color = Color.Green,
-                    fontSize = 26.sp
-                )
+            SentiguardTheme {
+                SentiguardNavGraph()
             }
         }
     }
