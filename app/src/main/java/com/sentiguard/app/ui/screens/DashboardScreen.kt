@@ -1,23 +1,32 @@
 package com.sentiguard.app.ui.screens
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.sentiguard.app.ui.theme.*
 
 @Composable
@@ -25,178 +34,212 @@ fun DashboardScreen(
     state: DashboardState,
     onEvent: (DashboardEvent) -> Unit
 ) {
-    // animated color transition (300ms as per spec)
     val statusColor by animateColorAsState(
         targetValue = when (state.securityStatus) {
             SecurityStatus.SAFE -> StatusSafe
             SecurityStatus.WARNING -> StatusWarning
             SecurityStatus.DANGER -> StatusDanger
         },
-        animationSpec = tween(durationMillis = 300),
-        label = "StatusColorAnimation"
+        animationSpec = tween(durationMillis = 500),
+        label = "StatusColor"
+    )
+
+    // Pulse Animation for Active Monitoring
+    val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (state.isMonitoring) 1.2f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseScale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = if (state.isMonitoring) 0f else 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = Restart
+        ),
+        label = "PulseAlpha"
     )
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = BlackPrimary,
-        // We use systemBars insets to avoid overlap with status/nav bars
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding) // Respect system bars
-                .padding(16.dp), // Design padding
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+                .padding(innerPadding)
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // 1. Header Section
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(top = 24.dp)
-        ) {
+            // 1. Header
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Sentiguard",
-                style = MaterialTheme.typography.headlineMedium, // Title size
-                color = TextSecondary
+                text = "SENTIGUARD",
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                letterSpacing = 2.sp
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                // "NOT MONITORING | MONITORING ACTIVE"
-                text = if (state.isMonitoring) "MONITORING ACTIVE" else "NOT MONITORING",
-                style = MaterialTheme.typography.labelLarge, // Button/Label size
-                color = if (state.isMonitoring) statusColor else TextDisabled
-            )
-        }
+            
+            Spacer(modifier = Modifier.weight(0.5f))
 
-        // 2. Status Indicator & Description
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.weight(1f), // Take available space to center vertically
-            verticalArrangement = Arrangement.Center
-        ) {
-            // Status Circle: 45% of screen width
+            // 2. Main Status Indicator (The "Eye")
             Box(
-                modifier = Modifier
-                    .fillMaxWidth(0.45f)
-                    .aspectRatio(1f)
-                    .background(statusColor, CircleShape),
                 contentAlignment = Alignment.Center
             ) {
-                // If needed, we can put icon or text inside. 
-                // Spec implies the color IS the indicator.
-                // We'll overlay the label ("SAFE") for accessibility/clarity as per previous implementation logic
-                Text(
-                    text = state.securityStatus.label,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimary
-                )
+                // Pulse Effect
+                if (state.isMonitoring) {
+                    Box(
+                        modifier = Modifier
+                            .size(200.dp)
+                            .scale(pulseScale)
+                            .background(statusColor.copy(alpha = 0.3f), CircleShape)
+                    )
+                }
+                
+                // Core Circle
+                Surface(
+                    modifier = Modifier.size(180.dp),
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.surfaceVariant,
+                    border = androidx.compose.foundation.BorderStroke(4.dp, statusColor),
+                    shadowElevation = 12.dp
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Icon(
+                            imageVector = if (state.securityStatus == SecurityStatus.SAFE) Icons.Default.ThumbUp else Icons.Default.Warning,
+                            contentDescription = null,
+                            tint = statusColor,
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = state.securityStatus.label,
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+                    }
+                }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
 
-            // Status Description
+            // Status Message
             Text(
-                text = state.statusMessage,
-                style = MaterialTheme.typography.displayLarge, // Using Status Hierarchy (Largest) for the description status? 
-                // Actually spec says: status_detail (text). 
-                // Let's use Title (HeadlineMedium) for the description to be readable but not huge.
-                // Wait, "Status Component" -> "States" -> "Label". 
-                // "Status Description" -> "Breathing normal".
-                // I will use HeadlineMedium for description to be very visible.
-                color = TextPrimary,
-                textAlign = TextAlign.Center,
-                maxLines = 1
+                text = state.statusMessage.uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+                color = if (state.isMonitoring) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = androidx.compose.ui.text.style.TextAlign.Center
             )
-        }
 
-        // 3. Actions Section (Primary + Secondary)
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(bottom = 16.dp)
-        ) {
-            // Primary Action
+            Spacer(modifier = Modifier.weight(1f))
+
+            // 3. Primary Action
+            val buttonBrush = Brush.horizontalGradient(
+                colors = if (state.isMonitoring) 
+                    listOf(StatusDanger, Color(0xFFB71C1C)) 
+                else 
+                    listOf(StatusSafe, BrandPrimary)
+            )
+
             Button(
                 onClick = { onEvent(DashboardEvent.ToggleMonitoring) },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp), // min height 56dp
+                    .height(64.dp)
+                    .clip(RoundedCornerShape(32.dp))
+                    .background(buttonBrush),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = if (state.isMonitoring) StatusDanger else StatusSafe,
-                    contentColor = TextPrimary
+                    containerColor = Color.Transparent
                 ),
-                shape = MaterialTheme.shapes.extraLarge
+                contentPadding = PaddingValues(0.dp)
             ) {
-                Text(
-                    text = if (state.isMonitoring) "STOP MONITORING" else "START MONITORING",
-                    style = MaterialTheme.typography.labelLarge
-                )
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = if (state.isMonitoring) "STOP MONITORING" else "START PROTECTION",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = Color.White
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // Secondary Actions Row (Instrument-style layout)
+            // 4. Quick Actions Grid
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween, // Spread visually
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Helper Composable for Consistency
-                DashboardActionButton(
-                    label = "NAIL CHECK",
-                    icon = androidx.compose.material.icons.Icons.Default.ThumbUp, // Using ThumbUp as proxy for "Check"
+                QuickActionItem(
+                    icon = Icons.Default.ThumbUp,
+                    label = "Nail Check",
                     onClick = { onEvent(DashboardEvent.NavigateToNailCheck) }
                 )
-                
-                DashboardActionButton(
-                    label = "LOGS",
-                    icon = androidx.compose.material.icons.Icons.Default.List,
+                QuickActionItem(
+                    icon = Icons.Default.List,
+                    label = "Logs",
                     onClick = { onEvent(DashboardEvent.NavigateToLogs) }
                 )
-                
-                DashboardActionButton(
-                    label = "SETTINGS",
-                    icon = androidx.compose.material.icons.Icons.Default.Settings,
-                    onClick = { onEvent(DashboardEvent.NavigateToSettings) }
+                QuickActionItem(
+                    icon = Icons.Default.PlayArrow, // Suggesting Guidance
+                    label = "Guidance",
+                    onClick = { onEvent(DashboardEvent.NavigateToGuidance) }
+                )
+                QuickActionItem(
+                    icon = Icons.Default.Info, // Statistics
+                    label = "Stats",
+                    onClick = { onEvent(DashboardEvent.NavigateToStatistics) }
                 )
             }
+            
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 }
 
 @Composable
-fun DashboardActionButton(
+fun RowScope.QuickActionItem(
+    icon: ImageVector,
     label: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
     onClick: () -> Unit
 ) {
     Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
         modifier = Modifier
-            .padding(8.dp)
-            // Ensure minimum touch target size
+            .weight(1f)
+            .clickable(onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        IconButton(
-            onClick = onClick,
-            modifier = Modifier
-                .size(56.dp) // Large target
-                .background(BlackSecondary, CircleShape) // Dark circle bg
+        Surface(
+            modifier = Modifier.size(56.dp),
+            shape = CircleShape,
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = label,
-                tint = TextSecondary,
-                modifier = Modifier.size(28.dp)
-            )
+            Box(contentAlignment = Alignment.Center) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
-        Spacer(modifier = Modifier.height(4.dp))
+        Spacer(modifier = Modifier.height(8.dp))
         Text(
             text = label,
-            style = MaterialTheme.typography.labelSmall, // Use small label
-            color = TextSecondary,
-            // letterSpacing = 1.sp // Add spacing for "technical" look
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

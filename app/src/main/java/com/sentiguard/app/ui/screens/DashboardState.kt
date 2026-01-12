@@ -26,4 +26,6 @@ sealed class DashboardEvent {
     data object NavigateToNailCheck : DashboardEvent()
     data object NavigateToLogs : DashboardEvent()
     data object NavigateToSettings : DashboardEvent()
+    data object NavigateToGuidance : DashboardEvent()
+    data object NavigateToStatistics : DashboardEvent()
 }

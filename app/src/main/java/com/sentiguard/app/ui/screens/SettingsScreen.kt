@@ -29,71 +29,90 @@ fun SettingsScreen(
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
-        containerColor = BlackPrimary,
+        containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(horizontal = 24.dp)
         ) {
+            Spacer(modifier = Modifier.height(24.dp))
             Text(
-                text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
-                color = TextPrimary
+                text = "SETTINGS",
+                style = MaterialTheme.typography.displayMedium, // Massive Header
+                color = MaterialTheme.colorScheme.onBackground
             )
 
             Spacer(modifier = Modifier.height(32.dp))
 
+            // Profile Section
+            Text("PROFILE", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(16.dp))
+            OutlinedTextField(
+                value = "Ramesh Kumar", // Mock
+                onValueChange = {},
+                label = { Text("Worker Name") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+             OutlinedTextField(
+                value = "ID-8829-X", // Mock
+                onValueChange = {},
+                label = { Text("Worker ID") },
+                modifier = Modifier.fillMaxWidth(),
+                 colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Emergency Section
+            Text("EMERGENCY", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.error)
+             Spacer(modifier = Modifier.height(16.dp))
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                 Column(modifier = Modifier.padding(16.dp).fillMaxWidth()) {
+                     Text("Emergency Contacts", style = MaterialTheme.typography.titleMedium)
+                     Spacer(modifier = Modifier.height(8.dp))
+                     Text("+91 98765 43210 (Supervisor)", style = MaterialTheme.typography.bodyMedium)
+                     Divider(modifier = Modifier.padding(vertical=8.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                     Text("108 (Ambulance)", style = MaterialTheme.typography.bodyMedium)
+                 }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
             // Configuration Section
+            Text("PREFERENCES", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+            Spacer(modifier = Modifier.height(16.dp))
             SettingItem(
                 label = "Vibration Alerts",
                 checked = state.isVibrationEnabled,
                 onCheckedChange = { onEvent(SettingsEvent.ToggleVibration(it)) }
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             SettingItem(
-                label = "Audio Support (\"You are not alone\")",
+                label = "Audio Support",
                 checked = state.isAudioSupportEnabled,
                 onCheckedChange = { onEvent(SettingsEvent.ToggleAudioSupport(it)) }
             )
+             Spacer(modifier = Modifier.height(16.dp))
+             SettingItem(
+                label = "App Lock (PIN)",
+                checked = false, // Mock
+                onCheckedChange = { }
+            )
             
             Spacer(modifier = Modifier.height(24.dp))
-            
-            // Language Section (Simple Placeholder)
-            Column {
-                 Text(
-                    text = "Language",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextSecondary
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-                 Text(
-                    text = state.selectedLanguage, // In real app, this would be a selector
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimary
-                )
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // About Section
-            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
-                Text(
-                    text = "Sentiguard",
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "v1.0.0 (Safety Critical)",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = TextDisabled
-                )
-            }
-            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }

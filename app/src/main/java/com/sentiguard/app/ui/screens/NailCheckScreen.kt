@@ -24,78 +24,109 @@ sealed class NailCheckEvent {
 }
 
 @Composable
+@Composable
 fun NailCheckScreen(
     state: NailCheckState,
     onEvent: (NailCheckEvent) -> Unit
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(BlackPrimary)
-            .padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        // Header
-        Text(
-            text = "Nail Oxygen Check",
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextPrimary,
-            modifier = Modifier.padding(top = 16.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Instructional Text
-        Text(
-            text = state.instructions,
-            style = MaterialTheme.typography.bodyLarge,
-            color = TextSecondary, // Secondary for instruction to distinguish from header
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Camera Preview Placeholder
-        Box(
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        contentWindowInsets = WindowInsets.systemBars
+    ) { innerPadding ->
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(3f / 4f)
-                .background(BlackSecondary), // Darker placeholder
-            contentAlignment = Alignment.Center
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            // Header
             Text(
-                text = "[ CAMERA PREVIEW ]",
-                style = MaterialTheme.typography.bodyLarge,
-                color = TextDisabled
-            )
-        }
-
-        if (state.isResultAvailable) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = state.resultMessage,
+                text = "CYANOSIS CHECK",
                 style = MaterialTheme.typography.headlineMedium,
-                color = StatusSafe // Assuming safe result for demo, logic would determine this
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(top = 16.dp)
             )
-        }
 
-        Spacer(modifier = Modifier.weight(1f))
+            Spacer(modifier = Modifier.height(32.dp))
 
-        // Action Button
-        Button(
-            onClick = { if (!state.isResultAvailable) onEvent(NailCheckEvent.CaptureImage) else onEvent(NailCheckEvent.Reset) },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(56.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = StatusSafe
-            )
-        ) {
-            Text(
-                text = if (state.isResultAvailable) "CHECK AGAIN" else "CAPTURE",
-                style = MaterialTheme.typography.labelLarge,
-                color = TextPrimary
-            )
+            // Camera Preview Placeholder (Viewfinder Style)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(3f / 4f)
+                    .clip(RoundedCornerShape(24.dp))
+                    .border(2.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(24.dp))
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center
+            ) {
+                if (state.isResultAvailable) {
+                    // Result Overlay
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp, // Mock result icon
+                            contentDescription = null,
+                            tint = StatusSafe,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = state.resultMessage,
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = StatusSafe
+                        )
+                    }
+                } else {
+                    // Preview Placeholder
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(
+                            imageVector = Icons.Default.ThumbUp, // Camera Icon proxy
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f),
+                            modifier = Modifier.size(48.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Text(
+                            text = "Align fingernail in frame",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Instructions
+            if (!state.isResultAvailable) {
+                Text(
+                    text = state.instructions,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Action Button
+            Button(
+                onClick = { if (!state.isResultAvailable) onEvent(NailCheckEvent.CaptureImage) else onEvent(NailCheckEvent.Reset) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(64.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (state.isResultAvailable) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.primary
+                ),
+                shape = RoundedCornerShape(32.dp)
+            ) {
+                Text(
+                    text = if (state.isResultAvailable) "CHECK AGAIN" else "CAPTURE ANALYSIS",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            }
         }
     }
 }

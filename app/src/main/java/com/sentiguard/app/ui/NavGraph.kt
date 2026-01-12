@@ -21,6 +21,8 @@ object SentiguardDestinations {
     const val NAIL_CHECK = "nail_check"
     const val LOGS = "logs"
     const val SETTINGS = "settings"
+    const val GUIDANCE = "guidance"
+    const val STATISTICS = "statistics"
 }
 
 @Composable
@@ -45,6 +47,8 @@ fun SentiguardNavGraph() {
                         is DashboardEvent.NavigateToNailCheck -> navController.navigate(SentiguardDestinations.NAIL_CHECK)
                         is DashboardEvent.NavigateToLogs -> navController.navigate(SentiguardDestinations.LOGS)
                         is DashboardEvent.NavigateToSettings -> navController.navigate(SentiguardDestinations.SETTINGS)
+                        is DashboardEvent.NavigateToGuidance -> navController.navigate(SentiguardDestinations.GUIDANCE)
+                        is DashboardEvent.NavigateToStatistics -> navController.navigate(SentiguardDestinations.STATISTICS)
                         is DashboardEvent.ToggleMonitoring -> { /* Handle monitoring toggle logic */ }
                     }
                 }
@@ -65,8 +69,11 @@ fun SentiguardNavGraph() {
         }
 
         composable(SentiguardDestinations.LOGS) {
-            val dummyState = EvidenceLogsState()
-            EvidenceLogsScreen(state = dummyState)
+            val dummyState = EvidenceLogsState() // In real app, load from repo
+            EvidenceLogsScreen(
+                state = dummyState,
+                onLogClick = { logId -> navController.navigate("evidence_detail/$logId") }
+            )
         }
 
         composable(SentiguardDestinations.SETTINGS) {
@@ -77,8 +84,29 @@ fun SentiguardNavGraph() {
                     when (event) {
                         is SettingsEvent.ToggleVibration -> { /* Handle toggle */ }
                         is SettingsEvent.ToggleAudioSupport -> { /* Handle toggle */ }
+                        is SettingsEvent.SelectLanguage -> { /* Handle language selection */ }
                     }
                 }
+            )
+        }
+
+        composable(SentiguardDestinations.GUIDANCE) {
+            com.sentiguard.app.ui.screens.GuidanceScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(SentiguardDestinations.STATISTICS) {
+            com.sentiguard.app.ui.screens.StatisticsScreen(
+                onBack = { navController.popBackStack() }
+            )
+        }
+        
+        composable("evidence_detail/{logId}") { backStackEntry ->
+            val logId = backStackEntry.arguments?.getString("logId") ?: "0"
+            com.sentiguard.app.ui.screens.EvidenceDetailScreen(
+                logId = logId,
+                onBack = { navController.popBackStack() }
             )
         }
     }
