@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
@@ -36,7 +37,8 @@ data class EvidenceLogsState(
 @Composable
 fun EvidenceLogsScreen(
     state: EvidenceLogsState,
-    onLogClick: (String) -> Unit = {}
+    onLogClick: (String) -> Unit = {},
+    onViewStats: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,11 +52,24 @@ fun EvidenceLogsScreen(
                 .padding(horizontal = 16.dp)
         ) {
             Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "EVIDENCE LOGS",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "EVIDENCE LOGS",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                IconButton(onClick = onViewStats) {
+                    Icon(
+                        imageVector = Icons.Default.Info, // Using Info or specialized chart icon if available
+                        contentDescription = "View Statistics",
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
             Text(
                 text = "Secure local storage",
                 style = MaterialTheme.typography.labelMedium,
@@ -67,14 +82,7 @@ fun EvidenceLogsScreen(
                 modifier = Modifier.fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                 val dummyLogs = listOf(
-                    LogItemData("2023-10-27", "09:45 AM", "25m", "Site inspection report logged.", "SAFE", GreenSafe, "Sector 4"),
-                    LogItemData("2023-10-26", "03:15 PM", "10m", "Potential hazard observed.", "WARNING", AmberWarning, "Sector 2"),
-                    LogItemData("2023-10-26", "01:00 PM", "45m", "Routine check completed.", "SAFE", GreenSafe, "Sector 7"),
-                    LogItemData("2023-10-25", "11:30 AM", "5m", "Critical gas levels detected.", "CRITICAL", RedPrimary, "Sector 9")
-                )
-                
-                items(dummyLogs) { log ->
+                items(state.logs) { log ->
                     LogItem(log, onClick = { onLogClick(log.id) })
                 }
             }
@@ -82,20 +90,16 @@ fun EvidenceLogsScreen(
     }
 }
 
-data class LogItemData(
-    val date: String, 
-    val time: String, 
-    val duration: String,
-    val desc: String, 
-    val status: String, 
-    val color: Color,
-    val location: String = ""
-) {
-    val id: String = java.util.UUID.randomUUID().toString()
-}
-
 @Composable
-fun LogItem(log: LogItemData, onClick: () -> Unit) {
+fun LogItem(log: LogEntry, onClick: () -> Unit) {
+    // Determine color based on status
+    val color = when(log.status) {
+        "SAFE" -> GreenSafe
+        "WARNING" -> AmberWarning
+        "CRITICAL" -> RedPrimary
+        else -> MaterialTheme.colorScheme.onSurface 
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -115,7 +119,7 @@ fun LogItem(log: LogItemData, onClick: () -> Unit) {
                 modifier = Modifier
                     .fillMaxHeight()
                     .width(6.dp)
-                    .background(log.color)
+                    .background(color)
             )
             
             Column(modifier = Modifier.padding(16.dp).weight(1f)) {
@@ -129,14 +133,14 @@ fun LogItem(log: LogItemData, onClick: () -> Unit) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                      Surface(
-                        color = log.color.copy(alpha = 0.1f),
+                        color = color.copy(alpha = 0.1f),
                         shape = RoundedCornerShape(4.dp),
-                         border = androidx.compose.foundation.BorderStroke(1.dp, log.color.copy(alpha=0.3f))
+                         border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha=0.3f))
                     ) {
                         Text(
                             text = log.status,
                             style = MaterialTheme.typography.labelSmall,
-                            color = log.color,
+                            color = color,
                             modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
                             fontWeight = FontWeight.Bold
                         )
@@ -146,7 +150,7 @@ fun LogItem(log: LogItemData, onClick: () -> Unit) {
                 Spacer(modifier = Modifier.height(4.dp))
                 
                 Text(
-                    text = log.desc,
+                    text = log.notes.ifEmpty { "No notes provided." },
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface
                 )

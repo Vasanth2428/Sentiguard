@@ -1,7 +1,9 @@
 package com.sentiguard.app.ui.screens
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -16,7 +18,8 @@ import com.sentiguard.app.ui.theme.*
 
 @Composable
 fun AlertsScreen(
-    onBack: () -> Unit = {}
+    state: AlertsState = AlertsState(),
+    onEvent: (AlertsEvent) -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -44,110 +47,154 @@ fun AlertsScreen(
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Red Summary Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(16.dp),
-            colors = CardDefaults.cardColors(containerColor = RedPrimary)
-        ) {
-            Column(modifier = Modifier.padding(20.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Surface(
-                            shape = RoundedCornerShape(8.dp),
-                            color = Color.White.copy(alpha = 0.2f)
-                        ) {
-                            Icon(Icons.Default.Warning, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+        // Red Summary Card (Only show if there are active alerts)
+        val activeCount = state.activeAlerts.size
+        if (activeCount > 0) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = RedPrimary)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Surface(
+                                shape = RoundedCornerShape(8.dp),
+                                color = Color.White.copy(alpha = 0.2f)
+                            ) {
+                                Icon(Icons.Default.Warning, null, tint = Color.White, modifier = Modifier.padding(8.dp))
+                            }
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text("Active Alerts", style = MaterialTheme.typography.titleMedium, color = Color.White)
+                                Text("$activeCount alerts requiring attention", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha=0.8f))
+                            }
                         }
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column {
-                            Text("Active Alerts", style = MaterialTheme.typography.titleMedium, color = Color.White)
-                            Text("1 alert requiring attention", style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha=0.8f))
-                        }
+                        Icon(Icons.Default.KeyboardArrowRight, null, tint = Color.White)
                     }
-                    Icon(Icons.Default.KeyboardArrowRight, null, tint = Color.White)
-                }
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    AlertStatItem(value = "0", label = "Critical")
-                    AlertStatItem(value = "1", label = "Warning")
-                    AlertStatItem(value = "15m", label = "Oldest")
                 }
             }
+             Spacer(modifier = Modifier.height(24.dp))
         }
-        
-        Spacer(modifier = Modifier.height(24.dp))
         
         // Tabs
         Row(modifier = Modifier.fillMaxWidth()) {
-            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Active (1)", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), color = RedPrimary)
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(Modifier.fillMaxWidth().height(2.dp).background(RedPrimary))
-            }
-            Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("History (4)", style = MaterialTheme.typography.titleMedium, color = TextGrey)
-                Spacer(modifier = Modifier.height(8.dp))
-                Box(Modifier.fillMaxWidth().height(1.dp).background(DividerColor))
-            }
+            TabItem(
+                label = "Active (${state.activeAlerts.size})", 
+                isSelected = state.selectedTab == 0, 
+                color = RedPrimary,
+                onClick = { onEvent(AlertsEvent.SelectTab(0)) }
+            )
+            TabItem(
+                label = "History (${state.historicalAlerts.size})", 
+                isSelected = state.selectedTab == 1, 
+                color = TextGrey,
+                onClick = { onEvent(AlertsEvent.SelectTab(1)) }
+            )
         }
         
         Spacer(modifier = Modifier.height(24.dp))
         
-        // Alert Card (Warning)
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = AmberLight),
-            border = androidx.compose.foundation.BorderStroke(1.dp, AmberWarning)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                     Surface(
-                        shape = RoundedCornerShape(8.dp),
-                        color = AmberWarning
-                    ) {
-                        Icon(Icons.Default.Info, null, tint = Color.White, modifier = Modifier.padding(6.dp))
-                    }
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text("Low Oxygen Level Warning", style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
-                        Row(verticalAlignment = Alignment.CenterVertically) {
-                            Surface(color = AmberWarning, shape = RoundedCornerShape(4.dp)) {
-                                Text("WARNING", modifier = Modifier.padding(horizontal=4.dp), style = MaterialTheme.typography.labelSmall, color = Color.White)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("15m ago", style = MaterialTheme.typography.bodySmall, color = TextGrey)
+        // List Content
+        val alertsToShow = if (state.selectedTab == 0) state.activeAlerts else state.historicalAlerts
+        
+        if (alertsToShow.isEmpty()) {
+            Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
+                Text("No alerts found", color = TextGrey)
+            }
+        } else {
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                 items(alertsToShow.size) { index ->
+                     val alert = alertsToShow[index]
+                     AlertCard(alert, onEvent)
+                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun RowScope.TabItem(label: String, isSelected: Boolean, color: Color, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .clickable(onClick = onClick), 
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            label, 
+            style = MaterialTheme.typography.titleMedium.copy(fontWeight = if(isSelected) FontWeight.Bold else FontWeight.Normal), 
+            color = if(isSelected) RedPrimary else TextGrey
+        )
+        Spacer(modifier = Modifier.height(8.dp))
+        Box(Modifier.fillMaxWidth().height(if(isSelected) 2.dp else 1.dp).background(if(isSelected) RedPrimary else DividerColor))
+    }
+}
+
+@Composable
+fun AlertCard(alert: Alert, onEvent: (AlertsEvent) -> Unit) {
+    val cardColor = when(alert.severity) {
+        AlertSeverity.CRITICAL -> RedPrimary.copy(alpha=0.1f)
+        AlertSeverity.WARNING -> AmberLight
+        else -> MaterialTheme.colorScheme.surface
+    }
+    
+    val borderColor = when(alert.severity) {
+        AlertSeverity.CRITICAL -> RedPrimary
+        AlertSeverity.WARNING -> AmberWarning
+        else -> MaterialTheme.colorScheme.outlineVariant
+    }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = cardColor),
+        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                 Surface(
+                    shape = RoundedCornerShape(8.dp),
+                    color = borderColor
+                ) {
+                    Icon(Icons.Default.Info, null, tint = Color.White, modifier = Modifier.padding(6.dp))
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(alert.title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Surface(color = borderColor, shape = RoundedCornerShape(4.dp)) {
+                            Text(alert.severity.name, modifier = Modifier.padding(horizontal=4.dp), style = MaterialTheme.typography.labelSmall, color = Color.White)
                         }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(alert.timestamp, style = MaterialTheme.typography.bodySmall, color = TextGrey)
                     }
                 }
-                
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                alert.message,
+                style = MaterialTheme.typography.bodyMedium
+            )
+             Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                alert.location,
+                style = MaterialTheme.typography.bodySmall,
+                color = TextGrey
+            )
+            
+            if (alert.status == AlertStatus.ACTIVE) {
                 Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    "Nail color analysis indicates moderate oxygen deprivation. Monitor closely.",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    "Sector 7, Manhole Site A",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = TextGrey
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
                 Row(modifier = Modifier.fillMaxWidth()) {
                     OutlinedButton(
-                        onClick = {},
+                        onClick = { onEvent(AlertsEvent.AcknowledgeAlert(alert.id)) },
                         modifier = Modifier.weight(1f),
                         colors = ButtonDefaults.outlinedButtonColors(contentColor = GreenSafe),
                         border = androidx.compose.foundation.BorderStroke(1.dp, GreenSafe)
@@ -155,17 +202,9 @@ fun AlertsScreen(
                         Text("Acknowledge")
                     }
                     Spacer(modifier = Modifier.width(8.dp))
-                    OutlinedButton(onClick = {}) { Icon(Icons.Default.Clear, null) } // Mute/Dismiss
+                    OutlinedButton(onClick = { onEvent(AlertsEvent.DismissAlert(alert.id)) }) { Icon(Icons.Default.Clear, null) } 
                 }
             }
         }
-    }
-}
-
-@Composable
-private fun AlertStatItem(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold), color = Color.White)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.White.copy(alpha=0.8f))
     }
 }

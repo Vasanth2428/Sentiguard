@@ -60,8 +60,18 @@ fun SettingsScreen(
 
             // Monitoring Preferences Card
             SettingsCard(title = "Monitoring Preferences", icon = Icons.Default.Menu) {
-                SettingSwitchItem("Audio Alerts", "Enable sound notifications for safety alerts", true)
-                SettingSwitchItem("Vibration", "Enable vibration for critical alerts", true)
+                SettingSwitchItem(
+                    label = "Audio Alerts", 
+                    desc = "Enable sound notifications for safety alerts", 
+                    checked = state.isAudioSupportEnabled,
+                    onCheckedChange = { onEvent(SettingsEvent.ToggleAudioSupport(it)) }
+                )
+                SettingSwitchItem(
+                    label = "Vibration", 
+                    desc = "Enable vibration for critical alerts", 
+                    checked = state.isVibrationEnabled,
+                    onCheckedChange = { onEvent(SettingsEvent.ToggleVibration(it)) }
+                )
                 SettingSwitchItem("GPS Tracking", "Continuous location monitoring for safety logs", true)
             }
             

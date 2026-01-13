@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sentiguard.app.ui.screens.*
 
 object SentiguardDestinations {
@@ -24,6 +25,7 @@ object SentiguardDestinations {
     const val LOGS = "logs"
     const val ALERTS = "alerts"
     const val SUPPORT = "support"
+    const val STATISTICS = "statistics"
 }
 
 @Composable
@@ -60,9 +62,12 @@ fun SentiguardNavGraph() {
         ) {
             composable(SentiguardDestinations.DASHBOARD) {
                 // Home
+                val viewModel: DashboardViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
                 DashboardScreen(
-                    state = DashboardState(), 
-                    onEvent = {} // Wiring needed later
+                    state = state, 
+                    onEvent = viewModel::onEvent
                 )
             }
             
@@ -73,30 +78,52 @@ fun SentiguardNavGraph() {
 
             composable(SentiguardDestinations.SCAN) {
                 // Nail Check
+                val viewModel: NailCheckViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
                 NailCheckScreen(
-                    state = NailCheckState(),
-                    onEvent = {}
+                    state = state,
+                    onEvent = viewModel::onEvent
                 )
             }
 
             composable(SentiguardDestinations.LOGS) {
                 // Logs
-                EvidenceLogsScreen(state = EvidenceLogsState())
+                val viewModel: EvidenceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
+                EvidenceLogsScreen(
+                    state = state, 
+                    onViewStats = { navController.navigate(SentiguardDestinations.STATISTICS) }
+                )
             }
 
             composable(SentiguardDestinations.ALERTS) {
-                AlertsScreen()
+                val viewModel: AlertsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
+                AlertsScreen(state = state, onEvent = viewModel::onEvent)
             }
             
-             composable(SentiguardDestinations.SUPPORT) {
+            composable(SentiguardDestinations.SUPPORT) {
                 // Settings/Support
-                SettingsScreen(state = SettingsState(), onEvent = {})
+                val viewModel: SettingsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
+                SettingsScreen(state = state, onEvent = viewModel::onEvent)
             }
             
             // Details
              composable("evidence_detail/{logId}") { 
                 // ... detail logic
              }
+
+            composable(SentiguardDestinations.STATISTICS) {
+                val viewModel: StatisticsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                val state by viewModel.state.collectAsStateWithLifecycle()
+                
+                StatisticsScreen(state = state, onBack = { navController.popBackStack() })
+            }
         }
     }
 }

@@ -17,7 +17,8 @@ import com.sentiguard.app.ui.theme.*
 
 @Composable
 fun StatisticsScreen(
-    onBack: () -> Unit
+    state: StatisticsState = StatisticsState(),
+    onBack: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -46,9 +47,9 @@ fun StatisticsScreen(
                     modifier = Modifier.padding(24.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StatItem(label = "Hours Monitored", value = "42.5")
-                    StatItem(label = "Sessions", value = "12")
-                    StatItem(label = "Safety Score", value = "98%")
+                    state.summaryStats.forEach { stat ->
+                        StatItem(label = stat.label, value = stat.value)
+                    }
                 }
             }
 
@@ -70,7 +71,7 @@ fun StatisticsScreen(
                     .padding(24.dp)
             ) {
                 SimpleBarChart(
-                    data = listOf(0.4f, 0.6f, 0.8f, 0.3f, 0.7f, 0.9f, 0.5f),
+                    data = state.weeklyActivity,
                     color = MaterialTheme.colorScheme.primary
                 )
             }
@@ -85,9 +86,9 @@ fun StatisticsScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             
-            SystemHealthItem("Microphone Sensitivity", "Optimal", GreenSafe)
-            SystemHealthItem("Battery Impact", "Low (Polling 5m)", GreenSafe)
-            SystemHealthItem("Storage Space", "1.2GB Free", GreenSafe)
+            state.systemHealth.forEach { 
+                SystemHealthItem(it.label, it.value, it.color)
+            }
         }
     }
 }

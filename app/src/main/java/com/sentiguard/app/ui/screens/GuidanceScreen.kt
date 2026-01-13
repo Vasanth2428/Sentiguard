@@ -1,22 +1,19 @@
 package com.sentiguard.app.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sentiguard.app.ui.theme.*
 
@@ -95,7 +92,16 @@ fun GuidanceScreen(
 
 @Composable
 fun AudioPlayerCard() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    // Remember the player to survive recompositions, but handle cleanup if feasible
+    val audioPlayer = remember { com.sentiguard.app.system.audio.AudioPlayer(context) }
     var isPlaying by remember { mutableStateOf(false) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            audioPlayer.stop()
+        }
+    }
 
     Card(
         shape = RoundedCornerShape(16.dp),
@@ -125,14 +131,16 @@ fun AudioPlayerCard() {
             }
             
             IconButton(
-                onClick = { isPlaying = !isPlaying },
+                onClick = { 
+                    isPlaying = audioPlayer.toggle(com.sentiguard.R.raw.calming_audio) 
+                },
                 modifier = Modifier
                     .size(48.dp)
                     .background(MaterialTheme.colorScheme.primary, CircleShape)
             ) {
                 Icon(
-                    imageVector = if (isPlaying) Icons.Default.PlayArrow else Icons.Default.PlayArrow, // TODO: Add Pause Icon if needed
-                    contentDescription = "Play",
+                    imageVector = if (isPlaying) Icons.Default.Close else Icons.Default.PlayArrow,
+                    contentDescription = "Play/Pause",
                     tint = MaterialTheme.colorScheme.onPrimary
                 )
             }
