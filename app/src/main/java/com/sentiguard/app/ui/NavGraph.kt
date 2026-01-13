@@ -1,112 +1,135 @@
 package com.sentiguard.app.ui
 
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.sentiguard.app.ui.screens.DashboardEvent
-import com.sentiguard.app.ui.screens.DashboardScreen
-import com.sentiguard.app.ui.screens.DashboardState
-import com.sentiguard.app.ui.screens.EvidenceLogsScreen
-import com.sentiguard.app.ui.screens.EvidenceLogsState
-import com.sentiguard.app.ui.screens.NailCheckEvent
-import com.sentiguard.app.ui.screens.NailCheckScreen
-import com.sentiguard.app.ui.screens.NailCheckState
-import com.sentiguard.app.ui.screens.SettingsEvent
-import com.sentiguard.app.ui.screens.SettingsScreen
-import com.sentiguard.app.ui.screens.SettingsState
+import com.sentiguard.app.ui.screens.*
 
 object SentiguardDestinations {
-    const val DASHBOARD = "dashboard"
-    const val NAIL_CHECK = "nail_check"
+    const val DASHBOARD = "home"
+    const val MONITOR = "monitor"
+    const val SCAN = "scan"
     const val LOGS = "logs"
-    const val SETTINGS = "settings"
-    const val GUIDANCE = "guidance"
-    const val STATISTICS = "statistics"
+    const val ALERTS = "alerts"
+    const val SUPPORT = "support"
 }
 
 @Composable
 fun SentiguardNavGraph() {
     val navController = rememberNavController()
+    // Current route for bottom bar selection
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
 
-    NavHost(
-        navController = navController,
-        startDestination = SentiguardDestinations.DASHBOARD,
-        enterTransition = { androidx.compose.animation.slideInHorizontally(initialOffsetX = { 1000 }) + androidx.compose.animation.fadeIn() },
-        exitTransition = { androidx.compose.animation.slideOutHorizontally(targetOffsetX = { -1000 }) + androidx.compose.animation.fadeOut() },
-        popEnterTransition = { androidx.compose.animation.slideInHorizontally(initialOffsetX = { -1000 }) + androidx.compose.animation.fadeIn() },
-        popExitTransition = { androidx.compose.animation.slideOutHorizontally(targetOffsetX = { 1000 }) + androidx.compose.animation.fadeOut() }
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
+        bottomBar = {
+            SafeGuardBottomBar(
+                currentDestination = currentDestination,
+                onNavigate = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.findStartDestination().id) {
+                            saveState = true
+                        }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = SentiguardDestinations.DASHBOARD,
+            modifier = Modifier.padding(innerPadding),
+            enterTransition = { androidx.compose.animation.fadeIn() },
+            exitTransition = { androidx.compose.animation.fadeOut() }
+        ) {
+            composable(SentiguardDestinations.DASHBOARD) {
+                // Home
+                DashboardScreen(
+                    state = DashboardState(), 
+                    onEvent = {} // Wiring needed later
+                )
+            }
+            
+            composable(SentiguardDestinations.MONITOR) {
+                // Placeholder for Cough Monitor
+                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { Text("Cough Monitor Screen") }
+            }
+
+            composable(SentiguardDestinations.SCAN) {
+                // Nail Check
+                NailCheckScreen(
+                    state = NailCheckState(),
+                    onEvent = {}
+                )
+            }
+
+            composable(SentiguardDestinations.LOGS) {
+                // Logs
+                EvidenceLogsScreen(state = EvidenceLogsState())
+            }
+
+            composable(SentiguardDestinations.ALERTS) {
+                AlertsScreen()
+            }
+            
+             composable(SentiguardDestinations.SUPPORT) {
+                // Settings/Support
+                SettingsScreen(state = SettingsState(), onEvent = {})
+            }
+            
+            // Details
+             composable("evidence_detail/{logId}") { 
+                // ... detail logic
+             }
+        }
+    }
+}
+
+@Composable
+fun SafeGuardBottomBar(
+    currentDestination: androidx.navigation.NavDestination?,
+    onNavigate: (String) -> Unit
+) {
+    NavigationBar(
+        containerColor = MaterialTheme.colorScheme.surface,
+        tonalElevation = 8.dp
     ) {
-        composable(SentiguardDestinations.DASHBOARD) {
-            // In a real app, state would come from ViewModel
-            val dummyState = DashboardState() 
-            DashboardScreen(
-                state = dummyState,
-                onEvent = { event ->
-                    when (event) {
-                        is DashboardEvent.NavigateToNailCheck -> navController.navigate(SentiguardDestinations.NAIL_CHECK)
-                        is DashboardEvent.NavigateToLogs -> navController.navigate(SentiguardDestinations.LOGS)
-                        is DashboardEvent.NavigateToSettings -> navController.navigate(SentiguardDestinations.SETTINGS)
-                        is DashboardEvent.NavigateToGuidance -> navController.navigate(SentiguardDestinations.GUIDANCE)
-                        is DashboardEvent.NavigateToStatistics -> navController.navigate(SentiguardDestinations.STATISTICS)
-                        is DashboardEvent.ToggleMonitoring -> { /* Handle monitoring toggle logic */ }
-                    }
-                }
-            )
-        }
+        val items = listOf(
+            Triple(SentiguardDestinations.DASHBOARD, "Home", Icons.Default.Home),
+            Triple(SentiguardDestinations.MONITOR, "Monitor", Icons.Default.Star), // Mic icon ideal
+            Triple(SentiguardDestinations.SCAN, "Scan", Icons.Default.ThumbUp), // Camera/Scan icon
+            Triple(SentiguardDestinations.LOGS, "Logs", Icons.Default.LocationOn),
+            Triple(SentiguardDestinations.ALERTS, "Alerts", Icons.Default.Notifications),
+            Triple(SentiguardDestinations.SUPPORT, "Support", Icons.Default.Settings)
+        )
 
-        composable(SentiguardDestinations.NAIL_CHECK) {
-            val dummyState = NailCheckState()
-            NailCheckScreen(
-                state = dummyState,
-                onEvent = { event ->
-                    when (event) {
-                        is NailCheckEvent.CaptureImage -> { /* Trigger Camera/Mock Result */ }
-                        is NailCheckEvent.Reset -> { /* Reset State */ }
-                    }
-                }
-            )
-        }
-
-        composable(SentiguardDestinations.LOGS) {
-            val dummyState = EvidenceLogsState() // In real app, load from repo
-            EvidenceLogsScreen(
-                state = dummyState,
-                onLogClick = { logId -> navController.navigate("evidence_detail/$logId") }
-            )
-        }
-
-        composable(SentiguardDestinations.SETTINGS) {
-            val dummyState = SettingsState()
-            SettingsScreen(
-                state = dummyState,
-                onEvent = { event ->
-                    when (event) {
-                        is SettingsEvent.ToggleVibration -> { /* Handle toggle */ }
-                        is SettingsEvent.ToggleAudioSupport -> { /* Handle toggle */ }
-                        is SettingsEvent.SelectLanguage -> { /* Handle language selection */ }
-                    }
-                }
-            )
-        }
-
-        composable(SentiguardDestinations.GUIDANCE) {
-            com.sentiguard.app.ui.screens.GuidanceScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-
-        composable(SentiguardDestinations.STATISTICS) {
-            com.sentiguard.app.ui.screens.StatisticsScreen(
-                onBack = { navController.popBackStack() }
-            )
-        }
-        
-        composable("evidence_detail/{logId}") { backStackEntry ->
-            val logId = backStackEntry.arguments?.getString("logId") ?: "0"
-            com.sentiguard.app.ui.screens.EvidenceDetailScreen(
-                logId = logId,
-                onBack = { navController.popBackStack() }
+        items.forEach { (route, label, icon) ->
+            NavigationBarItem(
+                icon = { Icon(icon, contentDescription = label) },
+                label = { Text(label, style = MaterialTheme.typography.labelSmall) },
+                selected = currentDestination?.route == route,
+                onClick = { onNavigate(route) },
+                colors = NavigationBarItemDefaults.colors(
+                    selectedIconColor = MaterialTheme.colorScheme.primary,
+                    selectedTextColor = MaterialTheme.colorScheme.primary,
+                    indicatorColor = MaterialTheme.colorScheme.primaryContainer
+                )
             )
         }
     }

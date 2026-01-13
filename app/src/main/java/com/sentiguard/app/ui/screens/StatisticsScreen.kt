@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.sentiguard.app.ui.theme.*
@@ -47,9 +46,9 @@ fun StatisticsScreen(
                     modifier = Modifier.padding(24.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    StatItem("Hours Monitored", "42.5")
-                    StatItem("Sessions", "12")
-                    StatItem("Safety Score", "98%")
+                    StatItem(label = "Hours Monitored", value = "42.5")
+                    StatItem(label = "Sessions", value = "12")
+                    StatItem(label = "Safety Score", value = "98%")
                 }
             }
 
@@ -86,15 +85,15 @@ fun StatisticsScreen(
             )
             Spacer(modifier = Modifier.height(16.dp))
             
-            SystemHealthItem("Microphone Sensitivity", "Optimal", StatusSafe)
-            SystemHealthItem("Battery Impact", "Low (Polling 5m)", StatusSafe)
-            SystemHealthItem("Storage Space", "1.2GB Free", StatusSafe)
+            SystemHealthItem("Microphone Sensitivity", "Optimal", GreenSafe)
+            SystemHealthItem("Battery Impact", "Low (Polling 5m)", GreenSafe)
+            SystemHealthItem("Storage Space", "1.2GB Free", GreenSafe)
         }
     }
 }
 
 @Composable
-fun StatItem(label: String, value: String) {
+private fun StatItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(
             text = value,

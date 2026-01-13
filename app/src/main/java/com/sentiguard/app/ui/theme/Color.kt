@@ -2,31 +2,37 @@ package com.sentiguard.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Brand Colors - Professional & Trusted
-val BrandPrimary = Color(0xFF2E7D32) // Deep Safety Green
-val BrandSecondary = Color(0xFF455A64) // Blue Grey (Industrial/Professional)
-val BrandAccent = Color(0xFF00E676) // Bright High-Vis Green for active states
+// SafeGuard Brand Colors
+val RedPrimary = Color(0xFFE53935) // Safety Red
+val RedDark = Color(0xFFC62828)
+val RedLight = Color(0xFFFFEBEE) // For backgrounds of critical items
 
-// Backgrounds - "Dark Mode First" for reduced eye strain in low light
-val BlackPrimary = Color(0xFF121212) // OLED Black
-val BlackSecondary = Color(0xFF1C1C1E) // Slightly lighter for cards
-val BlackTertiary = Color(0xFF2C2C2E) // Lighter for elevated surfaces/modals
+val GreenSafe = Color(0xFF2E7D32) // Forest Green
+val GreenLight = Color(0xFFE8F5E9)
 
-// Surface Semantic Colors
-val SurfaceGood = Color(0xFF1B3022) // Very dark green tint for Safe zones
-val SurfaceWarning = Color(0xFF3E2D11) // Very dark yellow tint for Warning zones
-val SurfaceDanger = Color(0xFF3E1A1A) // Very dark red tint for Danger zones
+val AmberWarning = Color(0xFFFFC107)
+val AmberLight = Color(0xFFFFF8E1)
 
-// Text Colors
-val TextPrimary = Color(0xFFF2F2F2) // High contrast white-ish
-val TextSecondary = Color(0xFFAAAAAA) // Readable gray
-val TextTertiary = Color(0xFF666666) // De-emphasized details (timestamps etc)
+// Backgrounds & Surfaces (Light Mode)
+val BackgroundWhite = Color(0xFFFAFAFA) // Very light grey/white
+val SurfaceWhite = Color(0xFFFFFFFF)
+val SurfaceGrey = Color(0xFFF5F5F5)
 
-// Status Semantic Colors (Safety Critical - High Visibility)
-val StatusSafe = Color(0xFF4CAF50) // Material Green 500
-val StatusWarning = Color(0xFFFFC107) // Amber 500
-val StatusDanger = Color(0xFFF44336) // Red 500
-val StatusNeutral = Color(0xFF90A4AE) // Blue Grey 300 for inactive/unknown
+// Typography
+val TextDark = Color(0xFF212121)
+val TextGrey = Color(0xFF757575)
+val TextLight = Color(0xFFFFFFFF) // On Red background
 
-// Overlay/Scrim
-val ScrimColor = Color(0x99000000)
+// UI Elements
+val DividerColor = Color(0xFFEEEEEE)
+val ShadowColor = Color(0xFF000000)
+
+// Status Mappings
+val StatusSafeBg = GreenLight
+val StatusSafeText = GreenSafe
+
+val StatusWarningBg = AmberLight
+val StatusWarningText = Color(0xFFFFA000) // Darker amber for text
+
+val StatusCriticalBg = RedLight
+val StatusCriticalText = RedDark

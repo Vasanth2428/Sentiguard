@@ -27,7 +27,7 @@ fun EvidenceDetailScreen(
 ) {
     // Mock Data based on ID
     val isSafe = logId.toIntOrNull()?.rem(2) == 1
-    val statusColor = if (isSafe) StatusSafe else StatusWarning
+    val statusColor = if (isSafe) GreenSafe else AmberWarning
     
     Scaffold(
         modifier = Modifier.fillMaxSize(),

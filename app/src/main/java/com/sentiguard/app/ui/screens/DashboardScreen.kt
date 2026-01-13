@@ -3,25 +3,18 @@ package com.sentiguard.app.ui.screens
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.filled.ThumbUp
-import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -36,9 +29,9 @@ fun DashboardScreen(
 ) {
     val statusColor by animateColorAsState(
         targetValue = when (state.securityStatus) {
-            SecurityStatus.SAFE -> StatusSafe
-            SecurityStatus.WARNING -> StatusWarning
-            SecurityStatus.DANGER -> StatusDanger
+            SecurityStatus.SAFE -> GreenSafe
+            SecurityStatus.WARNING -> AmberWarning
+            SecurityStatus.DANGER -> RedPrimary
         },
         animationSpec = tween(durationMillis = 500),
         label = "StatusColor"
@@ -60,7 +53,7 @@ fun DashboardScreen(
         targetValue = if (state.isMonitoring) 0f else 0.6f,
         animationSpec = infiniteRepeatable(
             animation = tween(1000),
-            repeatMode = Restart
+            repeatMode = RepeatMode.Restart
         ),
         label = "PulseAlpha"
     )
@@ -68,143 +61,187 @@ fun DashboardScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets.systemBars
+        contentWindowInsets = WindowInsets(0,0,0,0), // Handle manually
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = { /* Emergency Logic */ },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                icon = { Icon(Icons.Default.Call, contentDescription = null) },
+                text = { Text("Emergency") }
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(innerPadding)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = innerPadding.calculateBottomPadding()) // Respect bottom bar
+                .verticalScroll(rememberScrollState())
         ) {
-            // 1. Header
-            Spacer(modifier = Modifier.height(24.dp))
-            Text(
-                text = "SENTIGUARD",
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                letterSpacing = 2.sp
-            )
-            
-            Spacer(modifier = Modifier.weight(0.5f))
-
-            // 2. Main Status Indicator (The "Eye")
+            // 1. Red Header Block
             Box(
-                contentAlignment = Alignment.Center
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(280.dp)
             ) {
-                // Pulse Effect
-                if (state.isMonitoring) {
-                    Box(
-                        modifier = Modifier
-                            .size(200.dp)
-                            .scale(pulseScale)
-                            .background(statusColor.copy(alpha = 0.3f), CircleShape)
-                    )
+                // Background Red
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .background(MaterialTheme.colorScheme.primary)
+                ) {
+                    Column(modifier = Modifier.padding(24.dp)) {
+                        Spacer(modifier = Modifier.height(32.dp)) // System bar inset
+                        Text(
+                            text = "SafeGuard Monitor",
+                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onPrimary
+                        )
+                        Text(
+                            text = "Your Safety Command Center",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha=0.9f)
+                        )
+                    }
                 }
-                
-                // Core Circle
-                Surface(
-                    modifier = Modifier.size(180.dp),
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.surfaceVariant,
-                    border = androidx.compose.foundation.BorderStroke(4.dp, statusColor),
-                    shadowElevation = 12.dp
+
+                // Overlapping "Start Monitoring" Card
+                Card(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 24.dp)
+                        .fillMaxWidth()
+                        .height(140.dp)
+                        .clickable { onEvent(DashboardEvent.ToggleMonitoring) },
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                 ) {
                     Column(
                         modifier = Modifier.fillMaxSize(),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
+                        // Play Button Icon (Red)
                         Icon(
-                            imageVector = if (state.securityStatus == SecurityStatus.SAFE) Icons.Default.ThumbUp else Icons.Default.Warning,
+                            imageVector = if (state.isMonitoring) Icons.Default.Close else Icons.Default.PlayArrow,
                             contentDescription = null,
-                            tint = statusColor,
-                            modifier = Modifier.size(48.dp)
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(56.dp)
                         )
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = state.securityStatus.label,
-                            style = MaterialTheme.typography.headlineLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            text = if (state.isMonitoring) "Monitoring Active" else "Start Monitoring",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = if (state.isMonitoring) "Tap to stop monitoring" else "Tap to begin safety monitoring",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            // Status Message
-            Text(
-                text = state.statusMessage.uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = if (state.isMonitoring) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = androidx.compose.ui.text.style.TextAlign.Center
-            )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            // 3. Primary Action
-            val buttonBrush = Brush.horizontalGradient(
-                colors = if (state.isMonitoring) 
-                    listOf(StatusDanger, Color(0xFFB71C1C)) 
-                else 
-                    listOf(StatusSafe, BrandPrimary)
-            )
-
-            Button(
-                onClick = { onEvent(DashboardEvent.ToggleMonitoring) },
+            // 2. Status Row (Battery, Network, Timer)
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(64.dp)
-                    .clip(RoundedCornerShape(32.dp))
-                    .background(buttonBrush),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.Transparent
-                ),
-                contentPadding = PaddingValues(0.dp)
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = if (state.isMonitoring) "STOP MONITORING" else "START PROTECTION",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                        color = Color.White
-                    )
-                }
+                StatusCapsule(icon = Icons.Default.ThumbUp, text = "85%", color = GreenSafe) // Battery proxy
+                StatusCapsule(icon = Icons.Default.Send, text = "Online", color = GreenSafe) // Wifi proxy
+                StatusCapsule(icon = Icons.Default.Refresh, text = state.sessionDuration, color = RedPrimary) // Timer
             }
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // 4. Quick Actions Grid
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
+            // 3. Real-Time Status Modules
+            Text(
+                text = "Real-Time Status",
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 24.dp)
+            )
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            ModuleCard(title = "Cough Monitor", subtitle = state.statusMessage, status = "SAFE", time = "5m ago", icon = Icons.Default.Star)
+            ModuleCard(title = "Oxygen Level", subtitle = "98%", status = "SAFE", time = "15m ago", icon = Icons.Default.Favorite)
+            ModuleCard(title = "GPS Tracking", subtitle = "Active", status = "SAFE", time = "2m ago", icon = Icons.Default.LocationOn)
+            
+            Spacer(modifier = Modifier.height(100.dp)) // Scroll padding
+        }
+    }
+}
+
+@Composable
+fun StatusCapsule(icon: ImageVector, text: String, color: Color) {
+    Surface(
+        shape = RoundedCornerShape(50),
+        color = MaterialTheme.colorScheme.surface,
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        modifier = Modifier.width(100.dp).height(40.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+        }
+    }
+}
+
+@Composable
+fun ModuleCard(title: String, subtitle: String, status: String, time: String, icon: ImageVector) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp, vertical = 8.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Icon Box
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .background(GreenLight, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
             ) {
-                QuickActionItem(
-                    icon = Icons.Default.ThumbUp,
-                    label = "Nail Check",
-                    onClick = { onEvent(DashboardEvent.NavigateToNailCheck) }
-                )
-                QuickActionItem(
-                    icon = Icons.Default.List,
-                    label = "Logs",
-                    onClick = { onEvent(DashboardEvent.NavigateToLogs) }
-                )
-                QuickActionItem(
-                    icon = Icons.Default.PlayArrow, // Suggesting Guidance
-                    label = "Guidance",
-                    onClick = { onEvent(DashboardEvent.NavigateToGuidance) }
-                )
-                QuickActionItem(
-                    icon = Icons.Default.Info, // Statistics
-                    label = "Stats",
-                    onClick = { onEvent(DashboardEvent.NavigateToStatistics) }
-                )
+                Icon(icon, null, tint = GreenSafe)
             }
             
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            
+            Column(modifier = Modifier.weight(1f)) {
+                Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(6.dp).background(GreenSafe, CircleShape))
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            
+            Column(horizontalAlignment = Alignment.End) {
+                Surface(color = GreenLight, shape = RoundedCornerShape(4.dp)) {
+                    Text(status, modifier = Modifier.padding(horizontal=8.dp, vertical=2.dp), style = MaterialTheme.typography.labelSmall, color = GreenSafe)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(time, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
         }
     }
 }
