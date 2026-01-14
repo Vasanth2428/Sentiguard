@@ -8,6 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Face
+import androidx.compose.material.icons.filled.Warning
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -92,11 +96,11 @@ fun HealthCheckScreen(
                     Text("Symptoms", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.height(8.dp))
                     
-                    SymptomRow("Do you feel dizzy?", state.hasDizziness) { viewModel.onDizzinessChange(it) }
+                    SymptomRow("Do you feel dizzy?", Icons.Default.Face, state.hasDizziness) { viewModel.onDizzinessChange(it) }
                     Divider(Modifier.padding(vertical = 8.dp))
-                    SymptomRow("Do you have a persistent cough?", state.hasCough) { viewModel.onCoughChange(it) }
+                    SymptomRow("Do you have a persistent cough?", Icons.Default.Warning, state.hasCough) { viewModel.onCoughChange(it) }
                     Divider(Modifier.padding(vertical = 8.dp))
-                    SymptomRow("Do you have a fever?", state.hasFever) { viewModel.onFeverChange(it) }
+                    SymptomRow("Do you have a fever?", Icons.Default.ThumbUp, state.hasFever) { viewModel.onFeverChange(it) } // ThumbUp as placeholder for Thermometer/Heat if not available, or Info
                 }
             }
 
@@ -109,6 +113,7 @@ fun HealthCheckScreen(
                         value = state.temperatureInput,
                         onValueChange = { viewModel.onTemperatureChange(it) },
                         label = { Text("Body Temperature (°C)") },
+                        leadingIcon = { Icon(Icons.Default.Info, null) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
                         modifier = Modifier.fillMaxWidth()
@@ -129,6 +134,8 @@ fun HealthCheckScreen(
                 modifier = Modifier.fillMaxWidth().height(50.dp),
                 enabled = state.temperatureInput.isNotEmpty()
             ) {
+                Icon(Icons.Default.Check, null)
+                Spacer(modifier = Modifier.width(8.dp))
                 Text("Submit Health Check")
             }
         }
@@ -136,13 +143,17 @@ fun HealthCheckScreen(
 }
 
 @Composable
-fun SymptomRow(text: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
+fun SymptomRow(text: String, icon: androidx.compose.ui.graphics.vector.ImageVector, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text, modifier = Modifier.weight(1f))
+        Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(text)
+        }
         Switch(checked = checked, onCheckedChange = onCheckedChange)
     }
 }

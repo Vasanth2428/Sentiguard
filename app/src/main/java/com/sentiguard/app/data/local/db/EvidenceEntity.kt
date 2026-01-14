@@ -29,5 +29,7 @@ data class EvidenceEntity(
     val longitude: Double?,
     val sensorValue: String?,
     val data: Map<String, String>,
-    val attachmentPath: String?
+    val attachmentPath: String?,
+    val hash: String? = null,
+    val previousHash: String? = null
 )

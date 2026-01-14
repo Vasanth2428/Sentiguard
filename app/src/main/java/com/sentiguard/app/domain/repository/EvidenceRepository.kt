@@ -18,4 +18,6 @@ interface EvidenceRepository {
     fun getEventsForSession(sessionId: String): Flow<List<EvidenceEvent>>
 
     fun getAllEvents(): Flow<List<EvidenceEvent>>
+    
+    suspend fun verifyIntegrity(): com.sentiguard.app.domain.model.VerificationResult
 }

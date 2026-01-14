@@ -4,7 +4,10 @@ import android.content.Context
 import android.util.Log
 import androidx.work.*
 import com.sentiguard.app.data.local.db.SentiguardDatabase
+import com.sentiguard.app.system.security.EncryptionManager
 import kotlinx.coroutines.delay
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.concurrent.TimeUnit
 
 class SyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorker(appContext, params) {
@@ -20,7 +23,7 @@ class SyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorke
             Log.d(TAG, "Starting Surface Sync for ${events.size} records...")
 
             if (events.isNotEmpty()) {
-                // 2. Encryption placeholder
+                // 2. Encrypt Data
                 encryptData(events)
 
                 // 3. Batch Upload (Simulation)
@@ -35,8 +38,30 @@ class SyncWorker(appContext: Context, params: WorkerParameters) : CoroutineWorke
         }
     }
 
-    private fun encryptData(data: List<Any>) {
-        // "Justice Sentinel" logic: AES-256 encryption before transmission
+    private fun encryptData(events: List<com.sentiguard.app.data.local.db.EvidenceEntity>) {
+        try {
+            val manager = EncryptionManager()
+            
+            // Convert to JSON
+            val jsonArray = JSONArray()
+            events.forEach { event ->
+                val jsonObj = JSONObject()
+                jsonObj.put("id", event.id)
+                jsonObj.put("type", event.type)
+                jsonObj.put("risk", event.riskLevel)
+                jsonArray.put(jsonObj)
+            }
+            
+            val rawData = jsonArray.toString().toByteArray(Charsets.UTF_8)
+            val encrypted = manager.encrypt(rawData)
+            
+            Log.i(TAG, "Encrypted ${rawData.size} bytes into ${encrypted.size} bytes using AES-256.")
+            // In a real app, this 'encrypted' byte array would be sent to the server.
+            
+        } catch (e: Exception) {
+            Log.e(TAG, "Encryption failed during sync", e)
+            throw e
+        }
     }
 
     companion object {

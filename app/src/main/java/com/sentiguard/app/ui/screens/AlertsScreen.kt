@@ -19,7 +19,8 @@ import com.sentiguard.app.ui.theme.*
 @Composable
 fun AlertsScreen(
     state: AlertsState = AlertsState(),
-    onEvent: (AlertsEvent) -> Unit = {}
+    onEvent: (AlertsEvent) -> Unit = {},
+    onBack: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -36,9 +37,13 @@ fun AlertsScreen(
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(Icons.Default.Notifications, null, tint = RedPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Alerts Management", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
+                Text("Alerts", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold))
             }
             IconButton(onClick = { /* Filter */ }) {
                 Icon(Icons.Default.Menu, null)
@@ -103,8 +108,26 @@ fun AlertsScreen(
         val alertsToShow = if (state.selectedTab == 0) state.activeAlerts else state.historicalAlerts
         
         if (alertsToShow.isEmpty()) {
-            Box(modifier = Modifier.fillMaxWidth().height(200.dp), contentAlignment = Alignment.Center) {
-                Text("No alerts found", color = TextGrey)
+            Box(modifier = Modifier.fillMaxWidth().height(300.dp), contentAlignment = Alignment.Center) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.CheckCircle, 
+                        contentDescription = null, 
+                        tint = MaterialTheme.colorScheme.outline.copy(alpha=0.5f),
+                        modifier = Modifier.size(64.dp)
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = "No Alerts Found",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = "You are currently safe.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline
+                    )
+                }
             }
         } else {
             LazyColumn(

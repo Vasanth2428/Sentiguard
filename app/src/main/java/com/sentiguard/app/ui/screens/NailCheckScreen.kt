@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -51,7 +52,8 @@ sealed class NailCheckEvent {
 @Composable
 fun NailCheckScreen(
     state: NailCheckState,
-    onEvent: (NailCheckEvent) -> Unit
+    onEvent: (NailCheckEvent) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -69,6 +71,7 @@ fun NailCheckScreen(
     NailCheckContent(
         state = state,
         onEvent = onEvent,
+        onBack = onBack,
         isPermissionGranted = cameraPermissionState.status.isGranted,
         cameraManager = cameraManager,
         lifecycleOwner = lifecycleOwner
@@ -79,6 +82,7 @@ fun NailCheckScreen(
 fun NailCheckContent(
     state: NailCheckState,
     onEvent: (NailCheckEvent) -> Unit,
+    onBack: () -> Unit = {},
     isPermissionGranted: Boolean,
     cameraManager: CameraManager? = null,
     lifecycleOwner: androidx.lifecycle.LifecycleOwner? = null
@@ -98,12 +102,19 @@ fun NailCheckContent(
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-             Text(
-                text = "Nail Color Analysis",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(top = 16.dp)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                 Text(
+                    text = "Nail Analysis",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
 
             Spacer(modifier = Modifier.height(32.dp))
 

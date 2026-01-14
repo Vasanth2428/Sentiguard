@@ -34,7 +34,8 @@ sealed class SettingsEvent {
 @Composable
 fun SettingsScreen(
     state: SettingsState,
-    onEvent: (SettingsEvent) -> Unit
+    onEvent: (SettingsEvent) -> Unit,
+    onBack: () -> Unit = {}
 ) {
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -50,10 +51,14 @@ fun SettingsScreen(
         ) {
             Spacer(modifier = Modifier.height(24.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
                 Icon(Icons.Default.Settings, null, tint = RedPrimary)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "Settings & Support",
+                    text = "Settings",
                     style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                     color = MaterialTheme.colorScheme.onBackground
                 )
@@ -118,6 +123,26 @@ fun SettingsScreen(
                 ) {
                     Text("Simulate Acoustic Hazard", color = TextDark)
                 }
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // About Section
+            SettingsCard(title = "About", icon = Icons.Default.Info) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Version", style = MaterialTheme.typography.bodyMedium)
+                    Text("1.0.0 (Alpha)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sentiguard: The Digital Life-Shield for Sanitation Workers.\n\nBuilt with ❤️ by Antigravity.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextGrey
+                )
+                 Spacer(modifier = Modifier.height(12.dp))
+                 TextButton(onClick = { /* Open Privacy Policy */ }) {
+                     Text("Privacy Policy", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                 }
             }
             
             Spacer(modifier = Modifier.height(32.dp))

@@ -1,6 +1,5 @@
 package com.sentiguard.app.ui
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
@@ -82,7 +81,7 @@ fun SentiguardNavGraph() {
             }
             
             composable(SentiguardDestinations.MONITOR) {
-                CoughMonitorScreen()
+                CoughMonitorScreen(onBack = { navController.navigate(SentiguardDestinations.DASHBOARD) })
             }
 
             composable(SentiguardDestinations.SCAN) {
@@ -92,7 +91,8 @@ fun SentiguardNavGraph() {
                 
                 NailCheckScreen(
                     state = state,
-                    onEvent = viewModel::onEvent
+                    onEvent = viewModel::onEvent,
+                    onBack = { navController.navigate(SentiguardDestinations.DASHBOARD) }
                 )
             }
 
@@ -100,10 +100,19 @@ fun SentiguardNavGraph() {
                 // Logs
                 val viewModel: EvidenceViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                 val state by viewModel.state.collectAsStateWithLifecycle()
+                val exportState by viewModel.exportState.collectAsStateWithLifecycle()
+                val verificationState by viewModel.verificationState.collectAsStateWithLifecycle()
                 
                 EvidenceLogsScreen(
-                    state = state, 
-                    onViewStats = { navController.navigate(SentiguardDestinations.STATISTICS) }
+                    state = state,
+                    exportState = exportState,
+                    verificationState = verificationState,
+                    onViewStats = { navController.navigate(SentiguardDestinations.STATISTICS) },
+                    onExport = viewModel::exportEvidence,
+                    onExportHandled = viewModel::resetExportState,
+                    onVerify = viewModel::verifyIntegrity,
+                    onResetVerification = viewModel::resetVerificationState,
+                    onBack = { navController.navigate(SentiguardDestinations.DASHBOARD) }
                 )
             }
 
@@ -111,7 +120,11 @@ fun SentiguardNavGraph() {
                 val viewModel: AlertsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 
-                AlertsScreen(state = state, onEvent = viewModel::onEvent)
+                AlertsScreen(
+                    state = state, 
+                    onEvent = viewModel::onEvent, 
+                    onBack = { navController.navigate(SentiguardDestinations.DASHBOARD) }
+                )
             }
             
             composable(SentiguardDestinations.SUPPORT) {
@@ -119,7 +132,11 @@ fun SentiguardNavGraph() {
                 val viewModel: SettingsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 
-                SettingsScreen(state = state, onEvent = viewModel::onEvent)
+                SettingsScreen(
+                    state = state, 
+                    onEvent = viewModel::onEvent, 
+                    onBack = { navController.navigate(SentiguardDestinations.DASHBOARD) }
+                )
             }
             
             // Details
@@ -131,7 +148,10 @@ fun SentiguardNavGraph() {
                 val viewModel: StatisticsViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
                 val state by viewModel.state.collectAsStateWithLifecycle()
                 
-                StatisticsScreen(state = state, onBack = { navController.popBackStack() })
+                StatisticsScreen(
+                    state = state, 
+                    onBack = { navController.popBackStack() }
+                )
             }
         }
     }

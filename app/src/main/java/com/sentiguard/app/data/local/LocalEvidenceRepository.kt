@@ -62,7 +62,21 @@ class LocalEvidenceRepository(
 
     override suspend fun logEvent(event: EvidenceEvent): Result<Unit> {
         return try {
-            val entity = event.toEntity()
+            // Justice Sentinel: Chain Hashing
+            val latestEvents = evidenceDao.getAllEventsSync()
+            val lastEvent = latestEvents.firstOrNull() 
+            val previousHash = lastEvent?.hash ?: "GENESIS_HASH"
+            
+            var entity = event.toEntity()
+            
+            val chainBuilder = com.sentiguard.app.system.security.EvidenceChainBuilder()
+            val currentHash = chainBuilder.buildEventHash(entity, previousHash)
+            
+            entity = entity.copy(
+                hash = currentHash,
+                previousHash = previousHash
+            )
+            
             evidenceDao.insertEvent(entity)
             Result.success(Unit)
         } catch (e: Exception) {
@@ -93,5 +107,18 @@ class LocalEvidenceRepository(
 
     private fun EvidenceEntity.toDomain(): EvidenceEvent {
         return EvidenceEvent(id, sessionId, timestamp, type, riskLevel, latitude, longitude, sensorValue, data, attachmentPath)
+    }
+    
+    override suspend fun verifyIntegrity(): com.sentiguard.app.domain.model.VerificationResult {
+        val events = evidenceDao.getAllEventsSync()
+        val verifier = com.sentiguard.app.system.security.IntegrityVerifier()
+        val systemResult = verifier.verifyChain(events)
+        
+        return com.sentiguard.app.domain.model.VerificationResult(
+            isClean = systemResult.isClean,
+            failedIndex = systemResult.failedIndex,
+            failedId = systemResult.failedId,
+            totalVerified = systemResult.totalVerified
+        )
     }
 }

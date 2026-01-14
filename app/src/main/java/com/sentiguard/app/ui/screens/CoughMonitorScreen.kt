@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -17,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import com.sentiguard.app.ui.theme.GreenSafe
 
 @Composable
-fun CoughMonitorScreen() {
+fun CoughMonitorScreen(onBack: () -> Unit = {}) {
     var isListening by remember { mutableStateOf(true) }
     
     // Animation for the "breathing" / listening effect
@@ -44,11 +45,19 @@ fun CoughMonitorScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Environmental Monitor",
-                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                color = MaterialTheme.colorScheme.onBackground
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                }
+                Text(
+                    text = "Environmental Monitor",
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
             
             Spacer(modifier = Modifier.height(8.dp))
             
@@ -114,9 +123,9 @@ fun CoughMonitorScreen() {
                    Text("System Status", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
                    Spacer(modifier = Modifier.height(16.dp))
                    StatusRow("Microphone", "Active", GreenSafe)
-                   Divider(modifier = Modifier.padding(vertical = 8.dp))
+                   HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                    StatusRow("ML Model (Edge)", "Running", GreenSafe)
-                   Divider(modifier = Modifier.padding(vertical = 8.dp))
+                   HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                    StatusRow("Gas Sensors", "Connected", GreenSafe)
                }
             }
