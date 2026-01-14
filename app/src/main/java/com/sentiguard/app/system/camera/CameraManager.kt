@@ -34,6 +34,40 @@ class CameraManager(private val context: Context) {
                     it.setSurfaceProvider(previewView.surfaceProvider)
                 }
 
+            val imageAnalysis = androidx.camera.core.ImageAnalysis.Builder()
+                .setBackpressureStrategy(androidx.camera.core.ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                .build()
+            
+            // HSV Analysis Logic
+            imageAnalysis.setAnalyzer(ContextCompat.getMainExecutor(context)) { imageProxy ->
+                // Basic implementation: Convert center pixel/region to HSV
+                // For "The Eye" pillar - Cyanosis detection logic
+                // NOTE: This is a lightweight heuristic, not full ML.
+                try {
+                     val bitmap = imageProxy.toBitmap()
+                     if (bitmap != null) {
+                        // Sample center
+                        val cx = bitmap.width / 2
+                        val cy = bitmap.height / 2
+                        val pixel = bitmap.getPixel(cx, cy)
+                        val hsv = FloatArray(3)
+                        android.graphics.Color.colorToHSV(pixel, hsv)
+                        
+                        val hue = hsv[0] // [0 .. 360]
+                        
+                        // Check for Cyanosis range (200 - 260 approx)
+                        if (hue in 200f..260f) {
+                            Log.w(TAG, "High Risk: Cyanosis detected (Hue: $hue)")
+                            // TODO: Broadcast this risk or use a callback to update UI state
+                        }
+                     }
+                } catch (e: Exception) {
+                    // Ignore frame errors
+                } finally {
+                    imageProxy.close()
+                }
+            }
+
             imageCapture = ImageCapture.Builder().build()
 
             val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
@@ -44,7 +78,8 @@ class CameraManager(private val context: Context) {
                     lifecycleOwner,
                     cameraSelector,
                     preview,
-                    imageCapture
+                    imageCapture,
+                    imageAnalysis
                 )
                 continuation.resume(Result.success(Unit))
             } catch (exc: Exception) {

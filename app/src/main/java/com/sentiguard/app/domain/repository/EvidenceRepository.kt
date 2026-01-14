@@ -16,4 +16,6 @@ interface EvidenceRepository {
     suspend fun logEvent(event: EvidenceEvent): Result<Unit>
     
     fun getEventsForSession(sessionId: String): Flow<List<EvidenceEvent>>
+
+    fun getAllEvents(): Flow<List<EvidenceEvent>>
 }

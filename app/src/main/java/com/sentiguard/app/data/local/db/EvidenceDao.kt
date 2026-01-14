@@ -13,4 +13,10 @@ interface EvidenceDao {
 
     @Query("SELECT * FROM evidence_events WHERE sessionId = :sessionId ORDER BY timestamp DESC")
     fun getEventsForSession(sessionId: String): Flow<List<EvidenceEntity>>
+
+    @Query("SELECT * FROM evidence_events ORDER BY timestamp DESC")
+    fun getAllEvents(): Flow<List<EvidenceEntity>>
+
+    @Query("SELECT * FROM evidence_events ORDER BY timestamp DESC")
+    suspend fun getAllEventsSync(): List<EvidenceEntity>
 }

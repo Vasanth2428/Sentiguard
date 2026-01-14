@@ -56,7 +56,6 @@ fun NailCheckScreen(
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val cameraManager = remember { CameraManager(context) }
-    val scope = rememberCoroutineScope()
     
     // Permission Handling
     val cameraPermissionState = rememberPermissionState(Manifest.permission.CAMERA)
@@ -66,6 +65,26 @@ fun NailCheckScreen(
             cameraPermissionState.launchPermissionRequest()
         }
     }
+
+    NailCheckContent(
+        state = state,
+        onEvent = onEvent,
+        isPermissionGranted = cameraPermissionState.status.isGranted,
+        cameraManager = cameraManager,
+        lifecycleOwner = lifecycleOwner
+    )
+}
+
+@Composable
+fun NailCheckContent(
+    state: NailCheckState,
+    onEvent: (NailCheckEvent) -> Unit,
+    isPermissionGranted: Boolean,
+    cameraManager: CameraManager? = null,
+    lifecycleOwner: androidx.lifecycle.LifecycleOwner? = null
+) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -111,19 +130,21 @@ fun NailCheckScreen(
                             contentScale = ContentScale.Crop
                         )
                     }
-                } else if (cameraPermissionState.status.isGranted) {
+                } else if (isPermissionGranted && cameraManager != null && lifecycleOwner != null) {
                     // Show Camera Preview
                     AndroidView(
                         factory = { ctx ->
-                            PreviewView(ctx).apply {
-                                scaleType = PreviewView.ScaleType.FILL_CENTER
-                                implementationMode = PreviewView.ImplementationMode.COMPATIBLE
+                            androidx.camera.view.PreviewView(ctx).also { view ->
+                                view.scaleType = androidx.camera.view.PreviewView.ScaleType.FILL_CENTER
+                                view.implementationMode = androidx.camera.view.PreviewView.ImplementationMode.COMPATIBLE
                             }
                         },
                         modifier = Modifier.fillMaxSize(),
                         update = { previewView ->
-                            scope.launch {
-                                cameraManager.startCamera(lifecycleOwner, previewView)
+                            if (cameraManager != null && lifecycleOwner != null) {
+                                scope.launch {
+                                    cameraManager.startCamera(lifecycleOwner, previewView)
+                                }
                             }
                         }
                     )
@@ -166,7 +187,7 @@ fun NailCheckScreen(
                     onClick = { 
                         if (!state.isResultAvailable) {
                             val outputDir = context.cacheDir 
-                            cameraManager.captureImage(outputDir) { result ->
+                            cameraManager?.captureImage(outputDir) { result ->
                                 result.onSuccess { file ->
                                     onEvent(NailCheckEvent.ImageCaptured(file))
                                 }
@@ -227,10 +248,12 @@ fun NailCheckScreen(
 @Composable
 fun NailCheckPreview() {
     SentiguardTheme {
-        NailCheckScreen(
+        NailCheckContent(
             state = NailCheckState(),
-            onEvent = {}
+            onEvent = {},
+            isPermissionGranted = true, // Mock permissions for preview
+            cameraManager = null,
+            lifecycleOwner = null
         )
     }
 }
-

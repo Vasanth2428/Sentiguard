@@ -25,6 +25,9 @@ data class EvidenceEntity(
     val timestamp: LocalDateTime,
     val type: EventType,
     val riskLevel: RiskLevel,
+    val latitude: Double?,
+    val longitude: Double?,
+    val sensorValue: String?,
     val data: Map<String, String>,
     val attachmentPath: String?
 )

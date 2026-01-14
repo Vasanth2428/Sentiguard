@@ -1,5 +1,6 @@
 package com.sentiguard.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,6 +27,8 @@ sealed class SettingsEvent {
     data class ToggleVibration(val enabled: Boolean) : SettingsEvent()
     data class ToggleAudioSupport(val enabled: Boolean) : SettingsEvent()
     data class SelectLanguage(val language: String) : SettingsEvent()
+    object SimulateGasLeak : SettingsEvent()
+    object SimulateHazard : SettingsEvent()
 }
 
 @Composable
@@ -86,9 +89,35 @@ fun SettingsScreen(
 
             Spacer(modifier = Modifier.height(16.dp))
             
-            // App Lock Placeholder
+             // App Lock Placeholder
              SettingsCard(title = "Security", icon = Icons.Default.Lock) {
                  SettingSwitchItem("App Lock (PIN)", "Require PIN to access app", false)
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Developer Options (Simulation)
+            SettingsCard(title = "Developer Options", icon = Icons.Default.Build) {
+                Text(
+                    "Simulation Controls", 
+                    style = MaterialTheme.typography.labelMedium, 
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                Button(
+                    onClick = { onEvent(SettingsEvent.SimulateGasLeak) },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text("Simulate Gas Leak (CRITICAL)")
+                }
+                Button(
+                    onClick = { onEvent(SettingsEvent.SimulateHazard) },
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = AmberWarning)
+                ) {
+                    Text("Simulate Acoustic Hazard", color = TextDark)
+                }
             }
             
             Spacer(modifier = Modifier.height(32.dp))
@@ -125,7 +154,10 @@ fun SettingSwitchItem(
     onCheckedChange: (Boolean) -> Unit = {}
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onCheckedChange(!checked) }
+            .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Column(modifier = Modifier.weight(1f)) {

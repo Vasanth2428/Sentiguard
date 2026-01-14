@@ -76,16 +76,22 @@ class LocalEvidenceRepository(
         }
     }
 
+    override fun getAllEvents(): Flow<List<EvidenceEvent>> {
+        return evidenceDao.getAllEvents().map { entities ->
+            entities.map { it.toDomain() }
+        }
+    }
+
     // Mappers
     private fun SessionEntity.toDomain(): Session {
         return Session(id, startTime, endTime, isActive)
     }
 
     private fun EvidenceEvent.toEntity(): EvidenceEntity {
-        return EvidenceEntity(id, sessionId, timestamp, type, riskLevel, data, attachmentPath)
+        return EvidenceEntity(id, sessionId, timestamp, type, riskLevel, latitude, longitude, sensorValue, data, attachmentPath)
     }
 
     private fun EvidenceEntity.toDomain(): EvidenceEvent {
-        return EvidenceEvent(id, sessionId, timestamp, type, riskLevel, data, attachmentPath)
+        return EvidenceEvent(id, sessionId, timestamp, type, riskLevel, latitude, longitude, sensorValue, data, attachmentPath)
     }
 }

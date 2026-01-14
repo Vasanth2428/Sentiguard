@@ -22,12 +22,17 @@ class SentiguardApp : Application() {
             applicationContext,
             SentiguardDatabase::class.java,
             "sentiguard-db"
-        ).build()
+        )
+        .fallbackToDestructiveMigration()
+        .build()
 
         // Initialize Repository (Manual DI)
         evidenceRepository = LocalEvidenceRepository(
             sessionDao = database.sessionDao(),
             evidenceDao = database.evidenceDao()
         )
+        
+        // Schedule Sync
+        com.sentiguard.app.system.sync.SyncWorker.schedule(this)
     }
 }

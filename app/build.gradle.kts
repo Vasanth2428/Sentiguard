@@ -7,9 +7,7 @@ plugins {
 
 android {
     namespace = "com.sentiguard"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.sentiguard"
@@ -75,4 +73,15 @@ dependencies {
 
     // Permissions
     implementation(libs.accompanist.permissions)
+
+    // Location & WorkManager
+    implementation(libs.play.services.location)
+    implementation(libs.work.runtime.ktx)
+
+    // TensorFlow Lite
+    implementation(libs.tensorflow.lite)
+    implementation(libs.tensorflow.lite.support)
+
+    // Coroutines
+    implementation(libs.kotlinx.coroutines.play.services)
 }

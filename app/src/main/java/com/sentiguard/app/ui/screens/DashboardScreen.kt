@@ -13,6 +13,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -25,7 +27,47 @@ import com.sentiguard.app.ui.theme.*
 @Composable
 fun DashboardScreen(
     state: DashboardState,
-    onEvent: (DashboardEvent) -> Unit
+    onEvent: (DashboardEvent) -> Unit,
+    onNavigateToHealth: () -> Unit = {}
+) {
+    // Permission State Holder (Stateful)
+    val permissions = remember {
+        listOf(
+            android.Manifest.permission.RECORD_AUDIO,
+            android.Manifest.permission.POST_NOTIFICATIONS,
+            android.Manifest.permission.ACCESS_FINE_LOCATION,
+            android.Manifest.permission.ACCESS_COARSE_LOCATION
+        ).toMutableList().apply {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                add(android.Manifest.permission.BLUETOOTH_SCAN)
+                add(android.Manifest.permission.BLUETOOTH_CONNECT)
+            }
+        }
+    }
+    
+    val permissionLauncher = rememberLauncherForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions()
+    ) { result ->
+        val allGranted = result.values.all { it }
+        if (allGranted) {
+            onEvent(DashboardEvent.ToggleMonitoring)
+        }
+    }
+
+    DashboardContent(
+        state = state,
+        onEvent = onEvent,
+        onNavigateToHealth = onNavigateToHealth,
+        onRequestPermissions = { permissionLauncher.launch(permissions.toTypedArray()) }
+    )
+}
+
+@Composable
+fun DashboardContent(
+    state: DashboardState,
+    onEvent: (DashboardEvent) -> Unit,
+    onNavigateToHealth: () -> Unit,
+    onRequestPermissions: () -> Unit
 ) {
     val statusColor by animateColorAsState(
         targetValue = when (state.securityStatus) {
@@ -106,6 +148,34 @@ fun DashboardScreen(
                     }
                 }
 
+                // Daily Health Check Button (New)
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .padding(bottom = 16.dp)
+                        .clickable { onNavigateToHealth() },
+                    shape = RoundedCornerShape(12.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            "Daily Fit-for-Duty Check",
+                            style = MaterialTheme.typography.titleSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onTertiaryContainer
+                        )
+                    }
+                }
+
                 // Overlapping "Start Monitoring" Card
                 Card(
                     modifier = Modifier
@@ -113,7 +183,13 @@ fun DashboardScreen(
                         .padding(horizontal = 24.dp)
                         .fillMaxWidth()
                         .height(140.dp)
-                        .clickable { onEvent(DashboardEvent.ToggleMonitoring) },
+                        .clickable { 
+                            if (state.isMonitoring) {
+                                onEvent(DashboardEvent.ToggleMonitoring)
+                            } else {
+                                onRequestPermissions()
+                            }
+                        },
                     shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
@@ -285,13 +361,15 @@ fun RowScope.QuickActionItem(
 @Composable
 fun DashboardPreview() {
     SentiguardTheme {
-        DashboardScreen(
+        DashboardContent(
             state = DashboardState(
                 isMonitoring = true,
                 securityStatus = SecurityStatus.SAFE,
                 statusMessage = "Breathing Normal"
             ),
-            onEvent = {}
+            onEvent = {},
+            onNavigateToHealth = {},
+            onRequestPermissions = {}
         )
     }
 }

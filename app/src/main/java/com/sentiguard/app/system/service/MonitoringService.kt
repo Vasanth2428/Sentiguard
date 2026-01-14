@@ -8,7 +8,9 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.sentiguard.R // Ensure R is accessible
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.cancel
+import com.sentiguard.R
 
 class MonitoringService : Service() {
 
@@ -22,29 +24,41 @@ class MonitoringService : Service() {
         when (action) {
             ACTION_START -> startMonitoring()
             ACTION_STOP -> stopMonitoring()
+            ACTION_SIMULATE_GAS -> triggerAlert("Gas Leak (Simulated)")
+            ACTION_SIMULATE_HAZARD -> triggerAlert("Acoustic Hazard (Simulated)")
         }
 
         return START_STICKY
     }
 
-    private fun startMonitoring() {
-        createNotificationChannel()
-
-        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("SafeGuard Active")
-            .setContentText("Monitoring for environmental hazards...")
-             // Using a system icon if app icon not ready, referencing generic 'ic_launcher' usually safe or android.R.drawable
-            .setSmallIcon(android.R.drawable.ic_dialog_info) 
-            .setPriority(NotificationCompat.PRIORITY_LOW)
-            .setOngoing(true)
-            .build()
-
-        startForeground(1, notification)
+    companion object {
+        const val CHANNEL_ID = "MonitoringServiceChannel"
+        const val ACTION_START = "ACTION_START"
+        const val ACTION_STOP = "ACTION_STOP"
+        const val ACTION_SIMULATE_GAS = "ACTION_SIMULATE_GAS"
+        const val ACTION_SIMULATE_HAZARD = "ACTION_SIMULATE_HAZARD"
     }
 
-    private fun stopMonitoring() {
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
+    private lateinit var hazardDetector: com.sentiguard.app.system.ml.HazardDetector
+    private lateinit var audioStreamProvider: com.sentiguard.app.system.audio.AudioStreamProvider
+    private lateinit var audioPlayer: com.sentiguard.app.system.audio.AudioPlayer
+    private lateinit var alertManager: com.sentiguard.app.system.alert.AlertManager
+    private lateinit var locationManager: com.sentiguard.app.system.location.LocationManager
+    private lateinit var repository: com.sentiguard.app.domain.repository.EvidenceRepository
+    private lateinit var bleManager: com.sentiguard.app.system.ble.BleManager
+    private val serviceScope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO + kotlinx.coroutines.SupervisorJob())
+
+    override fun onCreate() {
+        super.onCreate()
+        hazardDetector = com.sentiguard.app.system.ml.HazardDetector(this)
+        audioStreamProvider = com.sentiguard.app.system.audio.AudioStreamProvider(this)
+        audioPlayer = com.sentiguard.app.system.audio.AudioPlayer(this)
+        alertManager = com.sentiguard.app.system.alert.AlertManager(this)
+        locationManager = com.sentiguard.app.system.location.LocationManager(this)
+        
+        val db = com.sentiguard.app.data.local.db.SentiguardDatabase.getDatabase(this)
+        repository = com.sentiguard.app.data.local.LocalEvidenceRepository(db.sessionDao(), db.evidenceDao())
+        bleManager = com.sentiguard.app.system.ble.BleManager(this)
     }
 
     private fun createNotificationChannel() {
@@ -59,9 +73,107 @@ class MonitoringService : Service() {
         }
     }
 
-    companion object {
-        const val CHANNEL_ID = "MonitoringServiceChannel"
-        const val ACTION_START = "ACTION_START"
-        const val ACTION_STOP = "ACTION_STOP"
+    private fun startMonitoring() {
+        createNotificationChannel()
+
+        val notification: Notification = NotificationCompat.Builder(this, CHANNEL_ID)
+            .setContentTitle("SafeGuard Active")
+            .setContentText("Monitoring: Audio & Gas Sensors")
+            .setSmallIcon(android.R.drawable.ic_dialog_info) 
+            .setPriority(NotificationCompat.PRIORITY_LOW)
+            .setOngoing(true)
+            .build()
+
+        startForeground(1, notification)
+        
+        // Audio Monitoring
+        try {
+            audioStreamProvider.startStreaming { buffer ->
+                try {
+                    val result = hazardDetector.analyze(buffer)
+                    if (result.detected) {
+                       triggerAlert(result.label)
+                    }
+                } catch (e: Exception) {
+                }
+            }
+        } catch (e: Exception) {
+            stopSelf()
+        }
+
+        // BLE Gas Monitoring
+        serviceScope.launch {
+            bleManager.scanAndConnect().collect { gasLevel ->
+                if (gasLevel > 400f) { // Arbitrary threshold for MQ-2 (e.g. 400ppm)
+                    triggerAlert("High Gas Concentration: ${gasLevel.toInt()} ppm")
+                }
+            }
+        }
+        
+        scheduleSync()
+    }
+
+    private fun scheduleSync() {
+        val constraints = androidx.work.Constraints.Builder()
+            .setRequiredNetworkType(androidx.work.NetworkType.CONNECTED)
+            .build()
+            
+        val syncRequest = androidx.work.PeriodicWorkRequestBuilder<com.sentiguard.app.system.sync.SyncWorker>(
+            15, java.util.concurrent.TimeUnit.MINUTES
+        ).setConstraints(constraints).build()
+        
+        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+            "SurfaceSync",
+            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+            syncRequest
+        )
+    }
+
+    private fun triggerAlert(hazardType: String) {
+        val notification = alertManager.triggerDangerAlert(hazardType, 2)
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        notificationManager.notify(2, notification)
+        
+        serviceScope.launch {
+            val location = locationManager.getCurrentLocation()
+            val event = com.sentiguard.app.domain.model.EvidenceEvent(
+                id = java.util.UUID.randomUUID().toString(),
+                sessionId = "auto_session",
+                timestamp = java.time.LocalDateTime.now(),
+                type = com.sentiguard.app.domain.model.EventType.USER_ALERT,
+                riskLevel = com.sentiguard.app.domain.model.RiskLevel.CRITICAL,
+                latitude = location?.latitude,
+                longitude = location?.longitude,
+                sensorValue = hazardType,
+                data = emptyMap()
+            )
+            repository.logEvent(event)
+        }
+    }
+
+    private fun stopMonitoring() {
+        releaseResources()
+        stopSelf()
+    }
+
+    private fun releaseResources() {
+        try {
+            audioStreamProvider.stopStreaming()
+            audioPlayer.stop()
+            alertManager.stopAlert()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                stopForeground(STOP_FOREGROUND_REMOVE)
+            } else {
+                stopForeground(true)
+            }
+        } catch (e: Exception) {
+            // Ignored
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        releaseResources()
+        serviceScope.cancel() 
     }
 }

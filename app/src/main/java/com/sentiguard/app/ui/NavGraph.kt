@@ -26,6 +26,7 @@ object SentiguardDestinations {
     const val ALERTS = "alerts"
     const val SUPPORT = "support"
     const val STATISTICS = "statistics"
+    const val HEALTH = "health"
 }
 
 @Composable
@@ -67,13 +68,21 @@ fun SentiguardNavGraph() {
                 
                 DashboardScreen(
                     state = state, 
-                    onEvent = viewModel::onEvent
+                    onEvent = viewModel::onEvent,
+                    onNavigateToHealth = { navController.navigate(SentiguardDestinations.HEALTH) }
+                )
+            }
+            
+            composable(SentiguardDestinations.HEALTH) {
+                val viewModel: HealthCheckViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+                HealthCheckScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    viewModel = viewModel
                 )
             }
             
             composable(SentiguardDestinations.MONITOR) {
-                // Placeholder for Cough Monitor
-                Box(Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) { Text("Cough Monitor Screen") }
+                CoughMonitorScreen()
             }
 
             composable(SentiguardDestinations.SCAN) {

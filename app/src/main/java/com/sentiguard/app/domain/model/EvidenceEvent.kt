@@ -8,6 +8,9 @@ data class EvidenceEvent(
     val timestamp: LocalDateTime,
     val type: EventType,
     val riskLevel: RiskLevel,
+    val latitude: Double? = null,
+    val longitude: Double? = null,
+    val sensorValue: String? = null,
     val data: Map<String, String>, // Flexible payload (e.g. dB level, location)
     val attachmentPath: String? = null // Path to audio/image file
 )
