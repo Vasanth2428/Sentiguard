@@ -6,15 +6,15 @@ plugins {
 }
 
 android {
-    namespace = "com.sentiguard"
-    compileSdk = 36
+    namespace = "com.sentiguard.app"
+    compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sentiguard"
+        applicationId = "com.sentiguard.app"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
+        targetSdk = 35
+        versionCode = 2
+        versionName = "1.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -79,8 +79,10 @@ dependencies {
     implementation(libs.work.runtime.ktx)
 
     // TensorFlow Lite
-    implementation(libs.tensorflow.lite)
-    implementation(libs.tensorflow.lite.support)
+    implementation("com.google.ai.edge.litert:litert:1.4.0")
+    implementation("com.google.ai.edge.litert:litert-support:1.4.0")
+    implementation("com.google.ai.edge.litert:litert-metadata:1.4.0")
+    implementation("com.google.ai.edge.litert:litert-api:1.4.0")
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.play.services)

@@ -100,96 +100,98 @@ fun EvidenceLogsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                        Text(
+                            text = "LOGS",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
                     }
-                    Text(
-                        text = "LOGS",
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
-                }
 
-                Row {
-                    IconButton(onClick = onViewStats) {
-                        Icon(
-                            imageVector = Icons.Default.Info, 
-                            contentDescription = "View Statistics",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    
-                    IconButton(onClick = onVerify) {
-                         Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = "Verify Integrity",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                    
-                    IconButton(onClick = onExport) {
-                         Icon(
-                            imageVector = Icons.Default.Share,
-                            contentDescription = "Export Evidence",
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    Row {
+                        IconButton(onClick = onViewStats) {
+                            Icon(
+                                imageVector = Icons.Default.Info, 
+                                contentDescription = "View Statistics",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        IconButton(onClick = onVerify) {
+                             Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Verify Integrity",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        IconButton(onClick = onExport) {
+                             Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Export Evidence",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
+                
+                Text(
+                    text = "Secure local storage",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
-            
-            Text(
-                text = "Secure local storage",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(24.dp))
 
             if (state.logs.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Icon(
-                            imageVector = Icons.Default.Info, 
-                            contentDescription = null, 
-                            tint = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.size(64.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(
-                            text = "No Evidence Collected Yet",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Text(
-                            text = "Logs will appear here automatically.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.outline
-                        )
+                item {
+                    Box(modifier = Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Info, 
+                                contentDescription = null, 
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No Evidence Collected Yet",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Logs will appear here automatically.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
                     }
                 }
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    items(state.logs) { log ->
-                        LogItem(log, onClick = { onLogClick(log.id) })
-                    }
+                items(state.logs) { log ->
+                    LogItem(log, onClick = { onLogClick(log.id) })
                 }
             }
+            
+            item { Spacer(modifier = Modifier.height(80.dp)) } // Bottom Padding for FAB/Nav
         }
     }
 }

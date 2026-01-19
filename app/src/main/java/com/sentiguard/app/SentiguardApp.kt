@@ -18,13 +18,8 @@ class SentiguardApp : Application() {
         super.onCreate()
         
         // Initialize Room Database
-        database = Room.databaseBuilder(
-            applicationContext,
-            SentiguardDatabase::class.java,
-            "sentiguard-db"
-        )
-        .fallbackToDestructiveMigration()
-        .build()
+        // FIX: Use Singleton to prevent duplicate instances/locks
+        database = SentiguardDatabase.getDatabase(this)
 
         // Initialize Repository (Manual DI)
         evidenceRepository = LocalEvidenceRepository(
@@ -33,6 +28,11 @@ class SentiguardApp : Application() {
         )
         
         // Schedule Sync
-        com.sentiguard.app.system.sync.SyncWorker.schedule(this)
+        try {
+            com.sentiguard.app.system.sync.SyncWorker.schedule(this)
+        } catch (e: Exception) {
+            // Safety measure: Don't crash app if scheduling fails
+            android.util.Log.e("SentiguardApp", "Failed to schedule background sync", e)
+        }
     }
 }

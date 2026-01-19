@@ -140,7 +140,8 @@ fun SettingsScreen(
                     color = TextGrey
                 )
                  Spacer(modifier = Modifier.height(12.dp))
-                 TextButton(onClick = { /* Open Privacy Policy */ }) {
+                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                 TextButton(onClick = { uriHandler.openUri("https://www.google.com") }) {
                      Text("Privacy Policy", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                  }
             }

@@ -2,7 +2,7 @@ package com.sentiguard.app.system.audio
 
 import android.content.Context
 import android.media.MediaPlayer
-import com.sentiguard.R // Assuming R class is available, otherwise we use raw resource ID
+import com.sentiguard.app.R  // Updated to match namespace
 
 class AudioPlayer(private val context: Context) {
 

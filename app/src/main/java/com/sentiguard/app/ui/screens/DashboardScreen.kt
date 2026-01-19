@@ -100,13 +100,20 @@ fun DashboardContent(
         label = "PulseAlpha"
     )
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0,0,0,0), // Handle manually
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* Emergency Logic */ },
+                onClick = { 
+                    val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                        data = android.net.Uri.parse("tel:112")
+                    }
+                    context.startActivity(intent)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Default.Call, contentDescription = null) },

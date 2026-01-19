@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.res.AssetFileDescriptor
 import android.util.Log
 import org.tensorflow.lite.Interpreter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.FileInputStream
 import java.nio.MappedByteBuffer
 import java.nio.channels.FileChannel
@@ -22,10 +24,13 @@ class HazardDetector(private val context: Context) {
     // YAMNet typically returns 521 scores. We focus on specific indices for "Industrial" hazards.
     // NOTE: These indices depend on the specific training mapping. 
     // For this implementation, we will check generic "Gas Leak" / "Hiss" class approximations or high energy anomalies.
-    private val outputBuffer = Array(1) { FloatArray(521) } 
+    private var outputBuffer = Array(1) { FloatArray(521) } 
 
-    init {
-        loadModel()
+    suspend fun initialize() {
+        if (interpreter != null) return
+        withContext(Dispatchers.IO) {
+            loadModel()
+        }
     }
 
     private fun loadModel() {
@@ -35,7 +40,6 @@ class HazardDetector(private val context: Context) {
             Log.d(TAG, "TFLite model loaded successfully")
         } catch (e: Exception) {
             Log.e(TAG, "Error loading TFLite model: ${e.message}")
-            // Don't crash, just log. Service will handle grace degradation.
         }
     }
 
@@ -50,36 +54,24 @@ class HazardDetector(private val context: Context) {
 
     fun analyze(audioBuffer: ShortArray): HazardResult {
         if (interpreter == null) {
-            return mockInference() // Fallback if model load failed
+            return HazardResult(false, "Initializing...", 0f)
         }
 
         try {
-            // Preprocessing: Convert ShortArray to FloatArray normalized [-1, 1]
-            // Input shape for YAMNet is typically [1, 15600] for 0.975s
             val input = FloatArray(15600)
             val sizeToCopy = minOf(audioBuffer.size, 15600)
             
             for (i in 0 until sizeToCopy) {
                 input[i] = audioBuffer[i] / 32768.0f
             }
-            // Pad with zeros if short (already zero initialized)
 
             val inputArray = arrayOf(input)
             interpreter?.run(inputArray, outputBuffer)
 
-            // Post-processing: Find top class
-            // For this specific 'Sentiguard' demo, let's look for specific indices or general anomaly.
-            // As we don't have the exact label map loaded, we will use a heuristic on the output probability distribution.
-            // A real implementation would read label.csv.
-            
             val maxScoreIdx = outputBuffer[0].indices.maxByOrNull { outputBuffer[0][it] } ?: -1
             val maxScore = if(maxScoreIdx != -1) outputBuffer[0][maxScoreIdx] else 0f
 
-            // Threshold for detection
             if (maxScore > 0.5f) {
-                // Mapping arbitrary high confidence to "Acoustic Anomaly" if we don't have the specific class name
-                // In a real YAMNet, index 0 might be "Speech", 500 might be "Silence".
-                // TODO: Load labels.csv for precise naming.
                 return HazardResult(true, "Acoustic Hazard (Class $maxScoreIdx)", maxScore)
             }
             
@@ -92,7 +84,6 @@ class HazardDetector(private val context: Context) {
     }
 
     private fun mockInference(): HazardResult {
-         // Return safe by default to avoid annoying false positives during dev
          return HazardResult(false, "Normal", 0.99f)
     }
     
