@@ -4,11 +4,18 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+<<<<<<< HEAD
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+=======
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,8 +27,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+<<<<<<< HEAD
 import androidx.compose.ui.unit.sp
 import com.sentiguard.app.ui.theme.*
+=======
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
 
 @Composable
 fun StatisticsScreen(
@@ -36,6 +46,7 @@ fun StatisticsScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+<<<<<<< HEAD
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .verticalScroll(rememberScrollState())
         ) {
@@ -44,6 +55,30 @@ fun StatisticsScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(260.dp)
+=======
+                .padding(innerPadding)
+                .padding(horizontal = 24.dp)
+                .verticalScroll(rememberScrollState())
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onBack) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "STATISTICS",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Summary Card
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                modifier = Modifier.fillMaxWidth()
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
             ) {
                 Box(
                     modifier = Modifier

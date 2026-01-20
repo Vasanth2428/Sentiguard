@@ -10,7 +10,7 @@ import android.os.IBinder
 import androidx.core.app.NotificationCompat
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.cancel
-import com.sentiguard.R
+import com.sentiguard.app.R // Updated to match namespace
 
 class MonitoringService : Service() {
 
@@ -50,7 +50,6 @@ class MonitoringService : Service() {
 
     override fun onCreate() {
         super.onCreate()
-        hazardDetector = com.sentiguard.app.system.ml.HazardDetector(this)
         audioStreamProvider = com.sentiguard.app.system.audio.AudioStreamProvider(this)
         audioPlayer = com.sentiguard.app.system.audio.AudioPlayer(this)
         alertManager = com.sentiguard.app.system.alert.AlertManager(this)
@@ -59,6 +58,11 @@ class MonitoringService : Service() {
         val db = com.sentiguard.app.data.local.db.SentiguardDatabase.getDatabase(this)
         repository = com.sentiguard.app.data.local.LocalEvidenceRepository(db.sessionDao(), db.evidenceDao())
         bleManager = com.sentiguard.app.system.ble.BleManager(this)
+
+        hazardDetector = com.sentiguard.app.system.ml.HazardDetector(this)
+        serviceScope.launch {
+            hazardDetector.initialize()
+        }
     }
 
     private fun createNotificationChannel() {
@@ -84,7 +88,16 @@ class MonitoringService : Service() {
             .setOngoing(true)
             .build()
 
-        startForeground(1, notification)
+        try {
+            if (Build.VERSION.SDK_INT >= 29) {
+                 startForeground(1, notification, android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MICROPHONE or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC or android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE)
+            } else {
+                 startForeground(1, notification)
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MonitoringService", "Failed to start foreground service", e)
+            stopSelf()
+        }
         
         // Audio Monitoring
         try {
@@ -122,11 +135,15 @@ class MonitoringService : Service() {
             15, java.util.concurrent.TimeUnit.MINUTES
         ).setConstraints(constraints).build()
         
-        androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-            "SurfaceSync",
-            androidx.work.ExistingPeriodicWorkPolicy.KEEP,
-            syncRequest
-        )
+        try {
+            androidx.work.WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "SurfaceSync",
+                androidx.work.ExistingPeriodicWorkPolicy.KEEP,
+                syncRequest
+            )
+        } catch (e: Exception) {
+            android.util.Log.e("MonitoringService", "Failed to schedule sync", e)
+        }
     }
 
     private fun triggerAlert(hazardType: String) {

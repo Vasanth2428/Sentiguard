@@ -98,9 +98,10 @@ fun EvidenceLogsScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0,0,0,0)
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
+<<<<<<< HEAD
                 .padding(bottom = innerPadding.calculateBottomPadding())
         ) {
             // Creative Header with Gradient and Stats
@@ -207,10 +208,66 @@ fun EvidenceLogsScreen(
                             Icon(Icons.Default.Info, null, modifier = Modifier.size(18.dp))
                             Spacer(Modifier.width(4.dp))
                             Text("Full Report")
+=======
+                .padding(innerPadding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                     Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onBack) {
+                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        }
+                        Text(
+                            text = "LOGS",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                    }
+
+                    Row {
+                        IconButton(onClick = onViewStats) {
+                            Icon(
+                                imageVector = Icons.Default.Info, 
+                                contentDescription = "View Statistics",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        IconButton(onClick = onVerify) {
+                             Icon(
+                                imageVector = Icons.Default.Lock,
+                                contentDescription = "Verify Integrity",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        IconButton(onClick = onExport) {
+                             Icon(
+                                imageVector = Icons.Default.Share,
+                                contentDescription = "Export Evidence",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
                         }
                     }
                 }
+                
+                Text(
+                    text = "Secure local storage",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                Spacer(modifier = Modifier.height(24.dp))
             }
+<<<<<<< HEAD
 
             if (exportState is ExportState.Loading) {
                  LinearProgressIndicator(modifier = Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary)
@@ -230,8 +287,40 @@ fun EvidenceLogsScreen(
                         EnhancedLogItem(log, onClick = { onLogClick(log.id) })
                     }
                     item { Spacer(modifier = Modifier.height(24.dp)) }
+=======
+
+            if (state.logs.isEmpty()) {
+                item {
+                    Box(modifier = Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Icon(
+                                imageVector = Icons.Default.Info, 
+                                contentDescription = null, 
+                                tint = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.size(64.dp)
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = "No Evidence Collected Yet",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Text(
+                                text = "Logs will appear here automatically.",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.outline
+                            )
+                        }
+                    }
+                }
+            } else {
+                items(state.logs) { log ->
+                    LogItem(log, onClick = { onLogClick(log.id) })
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
                 }
             }
+            
+            item { Spacer(modifier = Modifier.height(80.dp)) } // Bottom Padding for FAB/Nav
         }
     }
 }

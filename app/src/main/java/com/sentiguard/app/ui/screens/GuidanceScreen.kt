@@ -52,40 +52,40 @@ fun GuidanceScreen(
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets.systemBars
     ) { innerPadding ->
-        Column(
+        LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Header
-            Text(
-                text = "GUIDANCE",
-                style = MaterialTheme.typography.headlineLarge,
-                color = MaterialTheme.colorScheme.onBackground
-            )
-            Spacer(modifier = Modifier.height(24.dp))
+            item {
+                Spacer(modifier = Modifier.height(24.dp))
+                // Header
+                Text(
+                    text = "GUIDANCE",
+                    style = MaterialTheme.typography.headlineLarge,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(24.dp))
 
-            // Audio Player Section
-            AudioPlayerCard()
+                // Audio Player Section
+                AudioPlayerCard()
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.height(32.dp))
 
-            Text(
-                text = "Safety Protocols",
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                items(guidanceItems) { item ->
-                    GuidanceCard(item)
-                }
+                Text(
+                    text = "Safety Protocols",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
+
+            items(guidanceItems) { item ->
+                GuidanceCard(item)
+            }
+            
+            item { Spacer(modifier = Modifier.height(24.dp)) }
         }
     }
 }
@@ -132,7 +132,7 @@ fun AudioPlayerCard() {
             
             IconButton(
                 onClick = { 
-                    isPlaying = audioPlayer.toggle(com.sentiguard.R.raw.calming_audio) 
+                    isPlaying = audioPlayer.toggle(com.sentiguard.app.R.raw.calming_audio) 
                 },
                 modifier = Modifier
                     .size(48.dp)

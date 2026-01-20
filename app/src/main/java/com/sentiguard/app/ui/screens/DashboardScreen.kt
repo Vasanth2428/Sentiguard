@@ -81,13 +81,44 @@ fun DashboardContent(
         label = "StatusColor"
     )
 
+<<<<<<< HEAD
+=======
+    // Pulse Animation for Active Monitoring
+    val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = if (state.isMonitoring) 1.2f else 1f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "PulseScale"
+    )
+    val pulseAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.6f,
+        targetValue = if (state.isMonitoring) 0f else 0.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(1000),
+            repeatMode = RepeatMode.Restart
+        ),
+        label = "PulseAlpha"
+    )
+
+    val context = androidx.compose.ui.platform.LocalContext.current
+
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         contentWindowInsets = WindowInsets(0,0,0,0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
-                onClick = { /* Emergency Logic */ },
+                onClick = { 
+                    val intent = android.content.Intent(android.content.Intent.ACTION_DIAL).apply {
+                        data = android.net.Uri.parse("tel:112")
+                    }
+                    context.startActivity(intent)
+                },
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 icon = { Icon(Icons.Default.Call, contentDescription = null) },

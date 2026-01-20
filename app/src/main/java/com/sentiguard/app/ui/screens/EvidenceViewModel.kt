@@ -100,8 +100,11 @@ class EvidenceViewModel(application: Application) : AndroidViewModel(application
     fun verifyIntegrity() {
         viewModelScope.launch {
             _verificationState.value = VerificationUiState.Verifying
-            kotlinx.coroutines.delay(1000)
-            val result = repository.verifyIntegrity()
+            val result = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                 kotlinx.coroutines.delay(1000) // Keep the UX delay if desired, but inside IO is fine
+                 repository.verifyIntegrity()
+            }
+            
             _verificationState.value = if (result.isClean) {
                 VerificationUiState.Verified(result.totalVerified)
             } else {

@@ -40,6 +40,9 @@ class NailCheckViewModel(application: Application) : AndroidViewModel(applicatio
     
     private fun analyzeImage(file: File) {
         viewModelScope.launch(Dispatchers.IO) {
+            // Artificial delay for better UX (so it doesn't feel instant/fake)
+            kotlinx.coroutines.delay(2000)
+            
             try {
                 // Decode bitmap from file
                 val bitmap = BitmapFactory.decodeFile(file.absolutePath)

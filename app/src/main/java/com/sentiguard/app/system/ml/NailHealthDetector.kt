@@ -52,7 +52,7 @@ class NailHealthDetector(private val context: Context) {
 
     fun analyze(bitmap: Bitmap): NailHealthResult {
         if (interpreter == null) {
-            return mockInference()
+            throw IllegalStateException("TFLite Interpreter is not initialized. Model likely failed to load.")
         }
 
         try {
@@ -83,7 +83,7 @@ class NailHealthDetector(private val context: Context) {
 
         } catch (e: Exception) {
             Log.e(TAG, "Inference failed", e)
-            return mockInference()
+             throw e
         }
     }
 
@@ -107,11 +107,6 @@ class NailHealthDetector(private val context: Context) {
             }
         }
         return byteBuffer
-    }
-
-    private fun mockInference(): NailHealthResult {
-        // Fallback or "Safe Mode"
-        return NailHealthResult(0.85f, "Healthy (Mock)", false)
     }
 
     companion object {

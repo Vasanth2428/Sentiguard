@@ -141,7 +141,32 @@ fun SettingsScreen(
                     }
                 }
             }
+<<<<<<< HEAD
 
+=======
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            
+            // About Section
+            SettingsCard(title = "About", icon = Icons.Default.Info) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("Version", style = MaterialTheme.typography.bodyMedium)
+                    Text("1.0.0 (Alpha)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(12.dp))
+                Text(
+                    "Sentiguard: The Digital Life-Shield for Sanitation Workers.\n\nBuilt with ❤️ by Antigravity.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = TextGrey
+                )
+                 Spacer(modifier = Modifier.height(12.dp))
+                 val uriHandler = androidx.compose.ui.platform.LocalUriHandler.current
+                 TextButton(onClick = { uriHandler.openUri("https://www.google.com") }) {
+                     Text("Privacy Policy", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                 }
+            }
+            
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
             Spacer(modifier = Modifier.height(32.dp))
 
             // 2. Settings Content Sections

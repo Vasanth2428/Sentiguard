@@ -5,7 +5,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+<<<<<<< HEAD
 import androidx.compose.foundation.shape.RoundedCornerShape
+=======
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -56,8 +59,16 @@ fun CoughMonitorScreen(onBack: () -> Unit = {}) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
+<<<<<<< HEAD
                 .padding(bottom = innerPadding.calculateBottomPadding())
                 .verticalScroll(scrollState)
+=======
+                .padding(innerPadding)
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally
+            // Removed verticalArrangement = Arrangement.Center to allow natural scroll flow
+>>>>>>> de0d02b8194591c7a6055614cf152bc427e5ac38
         ) {
             // 1. Red Header (Consistency with Dashboard)
             Box(
