@@ -20,8 +20,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.sentiguard.app.ui.theme.*
 
 @Composable
@@ -79,31 +81,10 @@ fun DashboardContent(
         label = "StatusColor"
     )
 
-    // Pulse Animation for Active Monitoring
-    val infiniteTransition = rememberInfiniteTransition(label = "Pulse")
-    val pulseScale by infiniteTransition.animateFloat(
-        initialValue = 1f,
-        targetValue = if (state.isMonitoring) 1.2f else 1f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Reverse
-        ),
-        label = "PulseScale"
-    )
-    val pulseAlpha by infiniteTransition.animateFloat(
-        initialValue = 0.6f,
-        targetValue = if (state.isMonitoring) 0f else 0.6f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000),
-            repeatMode = RepeatMode.Restart
-        ),
-        label = "PulseAlpha"
-    )
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0,0,0,0), // Handle manually
+        contentWindowInsets = WindowInsets(0,0,0,0),
         floatingActionButton = {
             ExtendedFloatingActionButton(
                 onClick = { /* Emergency Logic */ },
@@ -117,62 +98,79 @@ fun DashboardContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = innerPadding.calculateBottomPadding()) // Respect bottom bar
+                .padding(bottom = innerPadding.calculateBottomPadding())
                 .verticalScroll(rememberScrollState())
         ) {
             // 1. Red Header Block
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(280.dp)
+                    .height(440.dp) 
             ) {
                 // Background Red
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(220.dp)
+                        .height(350.dp)
                         .background(MaterialTheme.colorScheme.primary)
                 ) {
-                    Column(modifier = Modifier.padding(24.dp)) {
-                        Spacer(modifier = Modifier.height(32.dp)) // System bar inset
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Spacer(modifier = Modifier.height(80.dp))
                         Text(
-                            text = "SafeGuard Monitor",
-                            style = MaterialTheme.typography.headlineMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.onPrimary
+                            text = "Sentiguard",
+                            style = MaterialTheme.typography.headlineLarge.copy(
+                                fontWeight = FontWeight.ExtraBold,
+                                letterSpacing = 1.sp
+                            ),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(8.dp))
                         Text(
                             text = "Your Safety Command Center",
                             style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha=0.9f)
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha=0.8f),
+                            textAlign = TextAlign.Center
                         )
-                    }
-                }
+                        
+                        Spacer(modifier = Modifier.height(40.dp))
 
-                // Daily Health Check Button (New)
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
-                        .padding(bottom = 16.dp)
-                        .clickable { onNavigateToHealth() },
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, tint = MaterialTheme.colorScheme.onTertiaryContainer)
-                        Spacer(Modifier.width(8.dp))
-                        Text(
-                            "Daily Fit-for-Duty Check",
-                            style = MaterialTheme.typography.titleSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onTertiaryContainer
-                        )
+                        // Daily Health Check Button
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable { onNavigateToHealth() },
+                            shape = RoundedCornerShape(16.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 18.dp, horizontal = 24.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.CheckCircle, 
+                                    contentDescription = null, 
+                                    tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                                    modifier = Modifier.size(24.dp)
+                                )
+                                Spacer(Modifier.width(12.dp))
+                                Text(
+                                    "Daily Fit-for-Duty Check",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onTertiaryContainer
+                                )
+                            }
+                        }
                     }
                 }
 
@@ -182,7 +180,7 @@ fun DashboardContent(
                         .align(Alignment.BottomCenter)
                         .padding(horizontal = 24.dp)
                         .fillMaxWidth()
-                        .height(140.dp)
+                        .height(160.dp) // Increased height for better inner padding
                         .clickable { 
                             if (state.isMonitoring) {
                                 onEvent(DashboardEvent.ToggleMonitoring)
@@ -190,57 +188,64 @@ fun DashboardContent(
                                 onRequestPermissions()
                             }
                         },
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 10.dp)
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp), // Explicit inner padding
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
-                        // Play Button Icon (Red)
                         Icon(
                             imageVector = if (state.isMonitoring) Icons.Default.Close else Icons.Default.PlayArrow,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(56.dp)
+                            modifier = Modifier.size(64.dp) // Slightly larger icon
                         )
-                        Spacer(modifier = Modifier.height(8.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
                         Text(
                             text = if (state.isMonitoring) "Monitoring Active" else "Start Monitoring",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                            color = MaterialTheme.colorScheme.primary
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                fontWeight = FontWeight.Bold,
+                                letterSpacing = 0.5.sp
+                            ),
+                            color = MaterialTheme.colorScheme.primary,
+                            textAlign = TextAlign.Center
                         )
+                        Spacer(modifier = Modifier.height(4.dp)) // Added spacer for subtitle
                         Text(
                             text = if (state.isMonitoring) "Tap to stop monitoring" else "Tap to begin safety monitoring",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            style = MaterialTheme.typography.bodyMedium, // Larger subtitle for readability
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            textAlign = TextAlign.Center
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            // 2. Status Row (Battery, Network, Timer)
+            // 2. Status Row
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                StatusCapsule(icon = Icons.Default.ThumbUp, text = "85%", color = GreenSafe) // Battery proxy
-                StatusCapsule(icon = Icons.Default.Send, text = "Online", color = GreenSafe) // Wifi proxy
-                StatusCapsule(icon = Icons.Default.Refresh, text = state.sessionDuration, color = RedPrimary) // Timer
+                StatusCapsule(modifier = Modifier.weight(1f), icon = Icons.Default.ThumbUp, text = "85%", color = GreenSafe)
+                StatusCapsule(modifier = Modifier.weight(1f), icon = Icons.Default.Send, text = "Online", color = GreenSafe)
+                StatusCapsule(modifier = Modifier.weight(1f), icon = Icons.Default.Refresh, text = state.sessionDuration, color = RedPrimary)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // 3. Real-Time Status Modules
             Text(
                 text = "Real-Time Status",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
                 color = MaterialTheme.colorScheme.onBackground,
                 modifier = Modifier.padding(horizontal = 24.dp)
             )
@@ -251,26 +256,27 @@ fun DashboardContent(
             ModuleCard(title = "Oxygen Level", subtitle = "98%", status = "SAFE", time = "15m ago", icon = Icons.Default.Favorite)
             ModuleCard(title = "GPS Tracking", subtitle = "Active", status = "SAFE", time = "2m ago", icon = Icons.Default.LocationOn)
             
-            Spacer(modifier = Modifier.height(100.dp)) // Scroll padding
+            Spacer(modifier = Modifier.height(120.dp))
         }
     }
 }
 
 @Composable
-fun StatusCapsule(icon: ImageVector, text: String, color: Color) {
+fun StatusCapsule(modifier: Modifier = Modifier, icon: ImageVector, text: String, color: Color) {
     Surface(
-        shape = RoundedCornerShape(50),
+        shape = RoundedCornerShape(12.dp),
         color = MaterialTheme.colorScheme.surface,
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        modifier = Modifier.width(100.dp).height(40.dp)
+        modifier = modifier.height(48.dp)
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.padding(horizontal = 8.dp)
         ) {
-            Icon(icon, null, tint = color, modifier = Modifier.size(16.dp))
+            Icon(icon, null, tint = color, modifier = Modifier.size(18.dp))
             Spacer(modifier = Modifier.width(8.dp))
-            Text(text, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurface)
+            Text(text, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurface)
         }
     }
 }
@@ -280,8 +286,8 @@ fun ModuleCard(title: String, subtitle: String, status: String, time: String, ic
     Card(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(12.dp),
+            .padding(horizontal = 24.dp, vertical = 10.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
         border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
@@ -290,70 +296,34 @@ fun ModuleCard(title: String, subtitle: String, status: String, time: String, ic
             modifier = Modifier.padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Icon Box
             Box(
                 modifier = Modifier
-                    .size(48.dp)
-                    .background(GreenLight, RoundedCornerShape(8.dp)),
+                    .size(52.dp)
+                    .background(GreenLight, RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, null, tint = GreenSafe)
+                Icon(icon, null, tint = GreenSafe, modifier = Modifier.size(28.dp))
             }
             
             Spacer(modifier = Modifier.width(16.dp))
             
             Column(modifier = Modifier.weight(1f)) {
-                Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+                Text(title, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(6.dp).background(GreenSafe, CircleShape))
-                    Spacer(modifier = Modifier.width(4.dp))
+                    Box(Modifier.size(8.dp).background(GreenSafe, CircleShape))
+                    Spacer(modifier = Modifier.width(6.dp))
                     Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             
             Column(horizontalAlignment = Alignment.End) {
-                Surface(color = GreenLight, shape = RoundedCornerShape(4.dp)) {
-                    Text(status, modifier = Modifier.padding(horizontal=8.dp, vertical=2.dp), style = MaterialTheme.typography.labelSmall, color = GreenSafe)
+                Surface(color = GreenLight, shape = RoundedCornerShape(8.dp)) {
+                    Text(status, modifier = Modifier.padding(horizontal=10.dp, vertical=4.dp), style = MaterialTheme.typography.labelMedium, color = GreenSafe)
                 }
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(6.dp))
                 Text(time, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-    }
-}
-
-@Composable
-fun RowScope.QuickActionItem(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .weight(1f)
-            .clickable(onClick = onClick),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Surface(
-            modifier = Modifier.size(56.dp),
-            shape = CircleShape,
-            color = MaterialTheme.colorScheme.surfaceVariant,
-            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ) {
-            Box(contentAlignment = Alignment.Center) {
-                Icon(
-                    imageVector = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(24.dp)
-                )
-            }
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = label,
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
     }
 }
 
@@ -363,9 +333,9 @@ fun DashboardPreview() {
     SentiguardTheme {
         DashboardContent(
             state = DashboardState(
-                isMonitoring = true,
+                isMonitoring = false,
                 securityStatus = SecurityStatus.SAFE,
-                statusMessage = "Breathing Normal"
+                statusMessage = "System Ready"
             ),
             onEvent = {},
             onNavigateToHealth = {},
