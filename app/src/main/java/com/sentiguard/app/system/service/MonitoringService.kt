@@ -97,29 +97,53 @@ class MonitoringService : Service() {
         } catch (e: Exception) {
             android.util.Log.e("MonitoringService", "Failed to start foreground service", e)
             stopSelf()
+            return // Explicitly return
         }
         
         // Audio Monitoring
         try {
-            audioStreamProvider.startStreaming { buffer ->
-                try {
-                    val result = hazardDetector.analyze(buffer)
-                    if (result.detected) {
-                       triggerAlert(result.label)
+            if (androidx.core.app.ActivityCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.RECORD_AUDIO
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                audioStreamProvider.startStreaming { buffer ->
+                    try {
+                        val result = hazardDetector.analyze(buffer)
+                        if (result.detected) {
+                            triggerAlert(result.label)
+                        }
+                    } catch (e: Exception) {
+                        android.util.Log.e("MonitoringService", "Error during audio analysis", e)
                     }
-                } catch (e: Exception) {
                 }
+            } else {
+                 android.util.Log.e("MonitoringService", "RECORD_AUDIO permission missing")
             }
         } catch (e: Exception) {
+            android.util.Log.e("MonitoringService", "Failed to start audio streaming", e)
             stopSelf()
         }
 
         // BLE Gas Monitoring
         serviceScope.launch {
-            bleManager.scanAndConnect().collect { gasLevel ->
-                if (gasLevel > 400f) { // Arbitrary threshold for MQ-2 (e.g. 400ppm)
-                    triggerAlert("High Gas Concentration: ${gasLevel.toInt()} ppm")
+            try {
+                 if (Build.VERSION.SDK_INT >= 31 && 
+                    androidx.core.app.ActivityCompat.checkSelfPermission(
+                        this@MonitoringService,
+                        android.Manifest.permission.BLUETOOTH_CONNECT
+                    ) != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    android.util.Log.e("MonitoringService", "BLUETOOTH_CONNECT permission missing")
+                     return@launch
+                 }
+                 
+                bleManager.scanAndConnect().collect { gasLevel ->
+                    if (gasLevel > 400f) { // Arbitrary threshold for MQ-2 (e.g. 400ppm)
+                        triggerAlert("High Gas Concentration: ${gasLevel.toInt()} ppm")
+                    }
                 }
+            } catch (e: Exception) {
+                 android.util.Log.e("MonitoringService", "BLE Monitoring failed", e)
             }
         }
         
@@ -152,19 +176,48 @@ class MonitoringService : Service() {
         notificationManager.notify(2, notification)
         
         serviceScope.launch {
-            val location = locationManager.getCurrentLocation()
-            val event = com.sentiguard.app.domain.model.EvidenceEvent(
-                id = java.util.UUID.randomUUID().toString(),
-                sessionId = "auto_session",
-                timestamp = java.time.LocalDateTime.now(),
-                type = com.sentiguard.app.domain.model.EventType.USER_ALERT,
-                riskLevel = com.sentiguard.app.domain.model.RiskLevel.CRITICAL,
-                latitude = location?.latitude,
-                longitude = location?.longitude,
-                sensorValue = hazardType,
-                data = emptyMap()
-            )
-            repository.logEvent(event)
+            try {
+                // Permission Check for Location
+                if (androidx.core.app.ActivityCompat.checkSelfPermission(
+                        this@MonitoringService,
+                        android.Manifest.permission.ACCESS_FINE_LOCATION
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED ||
+                    androidx.core.app.ActivityCompat.checkSelfPermission(
+                         this@MonitoringService,
+                         android.Manifest.permission.ACCESS_COARSE_LOCATION
+                    ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                ) {
+                    val location = locationManager.getCurrentLocation()
+                    val event = com.sentiguard.app.domain.model.EvidenceEvent(
+                        id = java.util.UUID.randomUUID().toString(),
+                        sessionId = "auto_session",
+                        timestamp = java.time.LocalDateTime.now(),
+                        type = com.sentiguard.app.domain.model.EventType.USER_ALERT,
+                        riskLevel = com.sentiguard.app.domain.model.RiskLevel.CRITICAL,
+                        latitude = location?.latitude,
+                        longitude = location?.longitude,
+                        sensorValue = hazardType,
+                        data = emptyMap()
+                    )
+                    repository.logEvent(event)
+                } else {
+                     // Log detection without location
+                     val event = com.sentiguard.app.domain.model.EvidenceEvent(
+                        id = java.util.UUID.randomUUID().toString(),
+                        sessionId = "auto_session",
+                        timestamp = java.time.LocalDateTime.now(),
+                        type = com.sentiguard.app.domain.model.EventType.USER_ALERT,
+                        riskLevel = com.sentiguard.app.domain.model.RiskLevel.CRITICAL,
+                        latitude = null,
+                        longitude = null,
+                        sensorValue = hazardType,
+                        data = emptyMap()
+                    )
+                    repository.logEvent(event)
+                }
+            } catch (e: Exception) {
+                 android.util.Log.e("MonitoringService", "Failed to log event", e)
+            }
         }
     }
 

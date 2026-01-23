@@ -13,10 +13,14 @@ android {
         applicationId = "com.sentiguard.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
     }
 
     buildTypes {
@@ -51,6 +55,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material.icons.extended)
     implementation(libs.androidx.navigation.compose)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -78,7 +83,7 @@ dependencies {
     implementation(libs.play.services.location)
     implementation(libs.work.runtime.ktx)
 
-    // TensorFlow Lite
+    // TensorFlow Lite / LiteRT
     implementation("com.google.ai.edge.litert:litert:1.4.0")
     implementation("com.google.ai.edge.litert:litert-support:1.4.0")
     implementation("com.google.ai.edge.litert:litert-metadata:1.4.0")

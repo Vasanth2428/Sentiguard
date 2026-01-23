@@ -1,17 +1,19 @@
 package com.sentiguard.app.ui.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material.icons.filled.Face
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.rounded.Face
+import androidx.compose.material.icons.rounded.ThumbUp
+import androidx.compose.material.icons.rounded.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,11 +37,12 @@ fun HealthCheckScreen(
     if (state.isSubmitted) {
         AlertDialog(
             onDismissRequest = { viewModel.reset(); onNavigateBack() },
-            title = { Text(if (state.isFit) "Fit for Duty" else "Not Fit for Duty") },
+            title = { Text(if (state.isFit) "Fit for Duty" else "Not Fit for Duty", fontWeight = FontWeight.Bold) },
             text = { 
                 Text(
                     if (state.isFit) "You have passed the health screening. You may proceed." 
-                    else "Critical symptoms detected. Please report to a supervisor immediately."
+                    else "Critical symptoms detected. Please report to a supervisor immediately.",
+                    style = MaterialTheme.typography.bodyLarge
                 ) 
             },
             confirmButton = {
@@ -47,25 +50,29 @@ fun HealthCheckScreen(
                     onClick = { viewModel.reset(); onNavigateBack() },
                     colors = ButtonDefaults.buttonColors(
                         containerColor = if (state.isFit) GreenSafe else RedPrimary
-                    )
+                    ),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Done")
+                    Text("DONE", fontWeight = FontWeight.Bold)
                 }
             },
             icon = {
                 Icon(
                     if (state.isFit) Icons.Default.Check else Icons.Default.Close,
                     contentDescription = null,
-                    tint = if (state.isFit) GreenSafe else RedPrimary
+                    tint = if (state.isFit) GreenSafe else RedPrimary,
+                    modifier = Modifier.size(48.dp)
                 )
-            }
+            },
+            containerColor = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(24.dp)
         )
     }
 
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { Text("Daily Health Check") },
+                title = { Text("Daily Health Check", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(
@@ -73,41 +80,65 @@ fun HealthCheckScreen(
                             contentDescription = "Back"
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
             )
-        }
+        },
+        contentWindowInsets = WindowInsets.statusBars
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(16.dp)
+                .padding(24.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                "Please answer truthfully correctly.",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Symptoms", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
-                    
-                    SymptomRow("Do you feel dizzy?", Icons.Default.Face, state.hasDizziness) { viewModel.onDizzinessChange(it) }
-                    Divider(Modifier.padding(vertical = 8.dp))
-                    SymptomRow("Do you have a persistent cough?", Icons.Default.Warning, state.hasCough) { viewModel.onCoughChange(it) }
-                    Divider(Modifier.padding(vertical = 8.dp))
-                    SymptomRow("Do you have a fever?", Icons.Default.ThumbUp, state.hasFever) { viewModel.onFeverChange(it) } // ThumbUp as placeholder for Thermometer/Heat if not available, or Info
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.secondaryContainer),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                 Row(
+                    modifier = Modifier.fillMaxWidth().padding(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(Icons.Default.Info, null, tint = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text(
+                        "Please answer truthfully. Your safety depends on it.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
                 }
             }
 
-            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
-                Column(Modifier.padding(16.dp)) {
-                    Text("Vitals", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(8.dp))
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Text("Symptoms", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(16.dp))
+                    
+                    SymptomRow("Do you feel dizzy?", Icons.Rounded.Face, state.hasDizziness) { viewModel.onDizzinessChange(it) }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    SymptomRow("Persistent cough?", Icons.Rounded.Warning, state.hasCough) { viewModel.onCoughChange(it) }
+                    HorizontalDivider(Modifier.padding(vertical = 12.dp), color = MaterialTheme.colorScheme.outlineVariant)
+                    SymptomRow("Presence of fever?", Icons.Rounded.ThumbUp, state.hasFever) { viewModel.onFeverChange(it) } 
+                }
+            }
+
+            Card(
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(2.dp),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Column(Modifier.padding(20.dp)) {
+                    Text("Vitals Input", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(16.dp))
                     
                     OutlinedTextField(
                         value = state.temperatureInput,
@@ -116,13 +147,15 @@ fun HealthCheckScreen(
                         leadingIcon = { Icon(Icons.Default.Info, null) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
                     )
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         "Normal range: 36.1°C - 37.2°C", 
                         style = MaterialTheme.typography.labelSmall, 
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = 4.dp)
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp)
                     )
                 }
             }
@@ -131,13 +164,17 @@ fun HealthCheckScreen(
             
             Button(
                 onClick = { viewModel.submitCheck() },
-                modifier = Modifier.fillMaxWidth().height(50.dp),
-                enabled = state.temperatureInput.isNotEmpty()
+                modifier = Modifier.fillMaxWidth().height(56.dp),
+                enabled = state.temperatureInput.isNotEmpty(),
+                shape = RoundedCornerShape(16.dp),
+                elevation = ButtonDefaults.buttonElevation(4.dp)
             ) {
                 Icon(Icons.Default.Check, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Submit Health Check")
+                Text("SUBMIT CHECK", fontWeight = FontWeight.Bold)
             }
+            
+            Spacer(Modifier.height(32.dp))
         }
     }
 }
@@ -150,10 +187,24 @@ fun SymptomRow(text: String, icon: androidx.compose.ui.graphics.vector.ImageVect
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-            Spacer(modifier = Modifier.width(12.dp))
-            Text(text)
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(MaterialTheme.colorScheme.secondaryContainer, RoundedCornerShape(8.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, null, tint = MaterialTheme.colorScheme.onSecondaryContainer, modifier = Modifier.size(20.dp))
+            }
+            Spacer(modifier = Modifier.width(16.dp))
+            Text(text, style = MaterialTheme.typography.bodyLarge)
         }
-        Switch(checked = checked, onCheckedChange = onCheckedChange)
+        Switch(
+            checked = checked, 
+            onCheckedChange = onCheckedChange,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = MaterialTheme.colorScheme.primary,
+                checkedTrackColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        )
     }
 }

@@ -12,6 +12,7 @@ val GreenLight = Color(0xFFE8F5E9)
 
 val AmberWarning = Color(0xFFFFC107)
 val AmberLight = Color(0xFFFFF8E1)
+val AmberDark = Color(0xFFFFA000)
 
 // Backgrounds & Surfaces (Light Mode)
 val BackgroundWhite = Color(0xFFFAFAFA) // Very light grey/white

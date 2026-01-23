@@ -14,6 +14,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -80,6 +81,7 @@ fun NailCheckScreen(
     )
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NailCheckContent(
     state: NailCheckState,
@@ -95,31 +97,30 @@ fun NailCheckContent(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets(0,0,0,0) 
+        contentWindowInsets = WindowInsets(0,0,0,0),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Nail Analysis", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
     ) { innerPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .padding(24.dp)
+                .padding(horizontal = 24.dp)
                 .verticalScroll(rememberScrollState()),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(top = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                }
-                 Text(
-                    text = "Nail Analysis",
-                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
-            }
-
-            Spacer(modifier = Modifier.height(32.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Camera View / Result View
             Box(
@@ -127,7 +128,7 @@ fun NailCheckContent(
                     .fillMaxWidth()
                     .aspectRatio(3f / 4f)
                     .clip(RoundedCornerShape(24.dp))
-                    .border(2.dp, MaterialTheme.colorScheme.primary.copy(alpha=0.5f), RoundedCornerShape(24.dp))
+                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(24.dp))
                     .background(Color.Black),
                 contentAlignment = Alignment.Center
             ) {
@@ -167,7 +168,7 @@ fun NailCheckContent(
                     Box(
                         modifier = Modifier
                             .fillMaxSize(0.8f)
-                            .border(4.dp, MaterialTheme.colorScheme.primary, RoundedCornerShape(16.dp))
+                            .border(4.dp, MaterialTheme.colorScheme.primary.copy(alpha=0.8f), RoundedCornerShape(16.dp))
                     )
                 } else {
                      Text(
@@ -179,10 +180,11 @@ fun NailCheckContent(
                 // Instructions / Overlay
                 Box(
                     modifier = Modifier
-                        .background(Color.Black.copy(alpha=0.6f), RoundedCornerShape(8.dp))
                         .padding(16.dp)
                         .align(Alignment.BottomCenter)
                         .padding(bottom = 16.dp)
+                        .background(Color.Black.copy(alpha=0.6f), RoundedCornerShape(12.dp))
+                        .padding(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Text(
                         text = if(state.isResultAvailable) "Result: ${state.resultMessage}" else "Position fingernails within frame",
@@ -216,13 +218,14 @@ fun NailCheckContent(
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.primary
                     ),
-                    shape = RoundedCornerShape(12.dp)
+                    shape = RoundedCornerShape(16.dp),
+                    elevation = ButtonDefaults.buttonElevation(4.dp)
                 ) {
-                    Icon(Icons.Default.ThumbUp, null) // Scan Icon
+                    Icon(if(state.isResultAvailable) Icons.Default.CheckCircle else Icons.Default.ThumbUp, null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = if (state.isResultAvailable) "CHECK AGAIN" else "SCAN NAIL COLOR",
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
@@ -239,7 +242,7 @@ fun NailCheckContent(
                         val tempFile = File(context.cacheDir, "gallery_upload_${System.currentTimeMillis()}.jpg")
                         inputStream?.use { input ->
                             tempFile.outputStream().use { output ->
-                                input.copyTo(output)
+                                 input.copyTo(output)
                             }
                         }
                         onEvent(NailCheckEvent.ImageCaptured(tempFile))
@@ -249,11 +252,15 @@ fun NailCheckContent(
                 TextButton(onClick = { launcher.launch("image/*") }) {
                     Icon(Icons.Default.Add, null, tint = MaterialTheme.colorScheme.primary)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Select from Gallery", color = MaterialTheme.colorScheme.primary)
+                    Text(
+                        "Select from Gallery", 
+                        color = MaterialTheme.colorScheme.primary,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

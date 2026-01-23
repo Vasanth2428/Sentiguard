@@ -18,6 +18,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.sentiguard.app.ui.theme.*
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EvidenceLogsScreen(
     state: EvidenceLogsState,
@@ -33,7 +34,7 @@ fun EvidenceLogsScreen(
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     
-    // Verification Dialog
+    // Verification Dialog usage remains same...
     if (verificationState is VerificationUiState.Verifying) {
          AlertDialog(
             onDismissRequest = {},
@@ -98,100 +99,78 @@ fun EvidenceLogsScreen(
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
-        contentWindowInsets = WindowInsets.systemBars
+        contentWindowInsets = WindowInsets.statusBars,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Evidence Logs", style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)) },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = onViewStats) {
+                        Icon(Icons.Default.Info, contentDescription = "Stats")
+                    }
+                    IconButton(onClick = onVerify) {
+                        Icon(Icons.Default.Lock, contentDescription = "Verify")
+                    }
+                    IconButton(onClick = onExport) {
+                        Icon(Icons.Default.Share, contentDescription = "Export")
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.background
+                )
+            )
+        }
     ) { innerPadding ->
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            contentPadding = PaddingValues(top = 16.dp, bottom = 100.dp), // Extra bottom padding
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            item {
-                Spacer(modifier = Modifier.height(24.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Back")
-                        }
-                        Text(
-                            text = "LOGS",
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = MaterialTheme.colorScheme.onBackground
-                        )
-                    }
-
-                    Row {
-                        IconButton(onClick = onViewStats) {
-                            Icon(
-                                imageVector = Icons.Default.Info, 
-                                contentDescription = "View Statistics",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        
-                        IconButton(onClick = onVerify) {
-                             Icon(
-                                imageVector = Icons.Default.Lock,
-                                contentDescription = "Verify Integrity",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                        
-                        IconButton(onClick = onExport) {
-                             Icon(
-                                imageVector = Icons.Default.Share,
-                                contentDescription = "Export Evidence",
-                                tint = MaterialTheme.colorScheme.primary
-                            )
-                        }
-                    }
-                }
-                
-                Text(
-                    text = "Secure local storage",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-
-                Spacer(modifier = Modifier.height(24.dp))
-            }
-
+            
             if (state.logs.isEmpty()) {
                 item {
-                    Box(modifier = Modifier.fillMaxSize().padding(top = 100.dp), contentAlignment = Alignment.Center) {
+                    Box(modifier = Modifier.fillParentMaxSize().padding(bottom = 100.dp), contentAlignment = Alignment.Center) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Icon(
-                                imageVector = Icons.Default.Info, 
+                                imageVector = Icons.Default.FolderOpen, 
                                 contentDescription = null, 
-                                tint = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.size(64.dp)
+                                tint = MaterialTheme.colorScheme.outlineVariant,
+                                modifier = Modifier.size(80.dp)
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             Text(
-                                text = "No Evidence Collected Yet",
+                                text = "No Evidence Collected",
                                 style = MaterialTheme.typography.titleMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant
                             )
                             Text(
-                                text = "Logs will appear here automatically.",
-                                style = MaterialTheme.typography.bodySmall,
+                                text = "Events will be securely logged here.",
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.outline
                             )
                         }
                     }
                 }
             } else {
+                item {
+                    Text(
+                        text = "Secure Blockchain Storage",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 4.dp, bottom = 8.dp)
+                    )
+                }
                 items(state.logs) { log ->
                     LogItem(log, onClick = { onLogClick(log.id) })
                 }
             }
-            
-            item { Spacer(modifier = Modifier.height(80.dp)) } // Bottom Padding for FAB/Nav
         }
     }
 }
@@ -209,27 +188,29 @@ fun LogItem(log: LogEntry, onClick: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(12.dp),
+        shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface
         ),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
+        // Removed border
     ) {
         Row(
             modifier = Modifier.height(IntrinsicSize.Min)
         ) {
+            // Colored Status Strip
             Box(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .width(6.dp)
+                    .width(8.dp)
                     .background(color)
             )
             
             Column(modifier = Modifier.padding(16.dp).weight(1f)) {
                  Row(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
                         text = "${log.date} • ${log.time}", 
@@ -238,45 +219,46 @@ fun LogItem(log: LogEntry, onClick: () -> Unit) {
                     )
                      Surface(
                         color = color.copy(alpha = 0.1f),
-                        shape = RoundedCornerShape(4.dp),
-                         border = androidx.compose.foundation.BorderStroke(1.dp, color.copy(alpha=0.3f))
+                        shape = RoundedCornerShape(6.dp),
                     ) {
                         Text(
                             text = log.status,
                             style = MaterialTheme.typography.labelSmall,
                             color = color,
-                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             fontWeight = FontWeight.Bold
                         )
                     }
                 }
                 
-                Spacer(modifier = Modifier.height(4.dp))
+                Spacer(modifier = Modifier.height(8.dp))
                 
                 Text(
                     text = log.notes.ifEmpty { "No notes provided." },
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
                 )
                 
                 if (log.location.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     Row(verticalAlignment = Alignment.CenterVertically) {
                          Icon(
                             imageVector = Icons.Default.LocationOn,
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = log.location,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                         Spacer(modifier = Modifier.width(12.dp))
+                         Spacer(modifier = Modifier.width(16.dp))
                          Icon(
-                            imageVector = Icons.Default.Refresh,
+                            imageVector = Icons.Default.Schedule, // Updated icon
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.size(14.dp)
@@ -284,7 +266,7 @@ fun LogItem(log: LogEntry, onClick: () -> Unit) {
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = log.duration,
-                            style = MaterialTheme.typography.bodySmall,
+                            style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }

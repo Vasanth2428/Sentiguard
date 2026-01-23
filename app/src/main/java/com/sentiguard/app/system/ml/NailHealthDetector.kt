@@ -59,10 +59,8 @@ class NailHealthDetector(private val context: Context) {
             val resizedBitmap = Bitmap.createScaledBitmap(bitmap, inputImageWidth, inputImageHeight, true)
             val byteBuffer = convertBitmapToByteBuffer(resizedBitmap)
 
-            // Output buffer: Assuming simple classification [1, num_classes]
-            // If we don't know the classes, we'll assume binary or multi-class.
-            // Let's assume 3 classes: Healthy, Cyanosis, Anemia
-            val output = Array(1) { FloatArray(3) }
+            // Output buffer: Model outputs 6 classes [1, 6]
+            val output = Array(1) { FloatArray(6) }
 
             interpreter?.run(byteBuffer, output)
 
@@ -71,12 +69,16 @@ class NailHealthDetector(private val context: Context) {
             val maxIdx = probabilities.indices.maxByOrNull { probabilities[it] } ?: -1
             val maxScore = if (maxIdx != -1) probabilities[maxIdx] else 0f
 
-            // Map index to label (Placeholder mapping, assuming training order)
+            // Map index to label (Updated for 6 classes)
+            // Note: Exact labels should be verified with model trainer.
             val (label, isRisky) = when (maxIdx) {
                 0 -> "Healthy" to false
-                1 -> "Cyanosis Detected" to true // Blue tint
-                2 -> "Anemia Detected" to true   // Pale
-                else -> "Unknown" to false
+                1 -> "Cyanosis" to true       // Class 1
+                2 -> "Anemia" to true         // Class 2
+                3 -> "Jaundice" to true       // Class 3
+                4 -> "Clubbing" to true       // Class 4
+                5 -> "Fungal Infection" to true // Class 5
+                else -> "Unknown Analysis" to false
             }
 
             return NailHealthResult(maxScore, label, isRisky)
@@ -99,11 +101,11 @@ class NailHealthDetector(private val context: Context) {
             for (j in 0 until inputImageHeight) {
                 val value = intValues[pixel++]
 
-                // Extract RGB and normalize to [0, 1] or [-1, 1] depending on model
-                // Assuming standard [0, 1] for now
-                byteBuffer.putFloat(((value shr 16 and 0xFF) / 255.0f))
-                byteBuffer.putFloat(((value shr 8 and 0xFF) / 255.0f))
-                byteBuffer.putFloat(((value and 0xFF) / 255.0f))
+                // Extract RGB and normalize to [-1, 1] for MobileNet
+                // (value - 127.5) / 127.5
+                byteBuffer.putFloat(((value shr 16 and 0xFF) - 127.5f) / 127.5f)
+                byteBuffer.putFloat(((value shr 8 and 0xFF) - 127.5f) / 127.5f)
+                byteBuffer.putFloat(((value and 0xFF) - 127.5f) / 127.5f)
             }
         }
         return byteBuffer
